@@ -1,0 +1,100 @@
+[
+  {
+    "rule_id": "da_001",
+    "check": "Repository extends appropriate interface",
+    "result": "warn",
+    "detail": "MoodRepository extends CrudRepository, which is valid but less idiomatic than JpaRepository for a Spring Data JPA application. JpaRepository adds useful defaults (e.g. flush, batch delete helpers, List return types on findAll) without changing behavior much. The larger problem is the incorrect ID generic (see da_002), not the choice between Crud and Jpa per se.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java"
+    ]
+  },
+  {
+    "rule_id": "da_002",
+    "check": "Entity ID type consistency",
+    "result": "fail",
+    "detail": "Mood declares @Id @GeneratedValue on a primitive int field, but MoodRepository is parameterized as CrudRepository<Mood, String>. The repository ID type must match the entity identifier type (here int/Integer, not String). This mismatch can break type-safe repository methods (findById, deleteById) and indicates a serious mapping error.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java",
+      "src/main/java/com/example/moodsense/demo/model/Mood.java"
+    ]
+  },
+  {
+    "rule_id": "da_003",
+    "check": "Use of production-grade database",
+    "result": "warn",
+    "detail": "application.properties configures jdbc:h2:mem:testdb with H2Dialect and enables the H2 console. In-memory H2 is appropriate for demos, local development, and tests, but it is not suitable for production persistence (no durability across restarts, limited operational tooling). For production you would profile a managed RDBMS and use non-memory URLs or pooled external H2 only where justified.",
+    "files": [
+      "src/main/resources/application.properties",
+      "pom.xml"
+    ]
+  },
+  {
+    "rule_id": "da_004",
+    "check": "N+1 query problem",
+    "result": "fail",
+    "detail": "getBestLocationFromCoordinate calls moodRepository.getAllLocations() inside a for loop over coordinates (via getLocationsFromCoordinates). Each coordinate iteration re-executes the full locations query, causing N repeated identical reads instead of loading locations once and reusing the list in memory or pushing distance logic into the database.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java",
+      "src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java"
+    ]
+  },
+  {
+    "rule_id": "da_005",
+    "check": "Query hardcoded enum string",
+    "result": "warn",
+    "detail": "getAllHappyCoordinates uses JPQL with moodStatus = 'HAPPY' as a literal. Prefer a bind parameter (e.g. :status) typed as MoodStatus or use a derived query so renames and enum changes are compile-time checked and the value is not duplicated as a magic string.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java"
+    ]
+  },
+  {
+    "rule_id": "da_006",
+    "check": "Proper use of @Transactional",
+    "result": "warn",
+    "detail": "No @Transactional annotations appear on the service layer. Spring Data repository methods are transactional by default, so saves and queries will still run in transactions, but service-level boundaries are implicit. For clearer semantics and optimization, read-only service methods could use @Transactional(readOnly = true), and multi-step workflows could use an explicit propagation strategy.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java"
+    ]
+  },
+  {
+    "rule_id": "da_007",
+    "check": "Fetch strategy",
+    "result": "pass",
+    "detail": "Entities Mood and Location are standalone with scalar fields only; there are no @OneToMany, @ManyToOne, or other associations that require an explicit fetch type (LAZY vs EAGER). No fetch strategy misconfiguration applies given the current model.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/model/Mood.java",
+      "src/main/java/com/example/moodsense/demo/model/Location.java"
+    ]
+  },
+  {
+    "rule_id": "da_008",
+    "check": "Database migration tool",
+    "result": "warn",
+    "detail": "pom.xml has no Flyway or Liquibase dependency; schema is effectively managed by JPA ddl-auto defaults (not explicitly set in application.properties). For production, versioned migrations are recommended to make schema changes repeatable and reviewable.",
+    "files": [
+      "pom.xml",
+      "src/main/resources/application.properties"
+    ]
+  },
+  {
+    "rule_id": "da_009",
+    "check": "Connection pool configuration",
+    "result": "warn",
+    "detail": "No explicit HikariCP (or other pool) settings are present. Spring Boot 2.7 still defaults to HikariCP on the classpath, so pooling works out of the box, but production workloads typically tune maximum pool size, connection timeout, and leak detection via spring.datasource.hikari.*.",
+    "files": [
+      "src/main/resources/application.properties",
+      "pom.xml"
+    ]
+  },
+  {
+    "rule_id": "da_010",
+    "check": "Repository naming",
+    "result": "warn",
+    "detail": "The Java package is named com.example.moodsense.demo.repositary, which misspells repository. This hurts discoverability and consistency with conventional naming (repository).",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java",
+      "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java",
+      "src/test/java/com/example/moodsense/demo/service/MoodServiceImplementationTest.java"
+    ]
+  }
+]
