@@ -1,0 +1,96 @@
+[
+  {
+    "rule_id": "api_001",
+    "check": "REST resource naming",
+    "result": "fail",
+    "detail": "Paths are verb-oriented camelCase (`/uploadMood`, `/getMoodDistribution`, `/getHappyNearByLocations`) instead of noun-based, plural, lowercase-hyphenated resources (e.g. `/moods`, `/moods/distribution`).",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "rule_id": "api_002",
+    "check": "HTTP method usage",
+    "result": "pass",
+    "detail": "Read operations use GET and the create/upload flow uses POST, which matches typical usage for these operations.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "rule_id": "api_003",
+    "check": "Response status codes",
+    "result": "warn",
+    "detail": "POST `uploadMood` returns `void`, so Spring defaults to 200 OK rather than 201 Created for a successful create. There is no explicit error mapping (404/400) in the controller. GET handlers correctly imply 200 with `ResponseEntity` and `HttpStatus.OK`.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "rule_id": "api_004",
+    "check": "Request/Response DTOs",
+    "result": "fail",
+    "detail": "The controller accepts the JPA entity `Mood` directly as a request parameter and persists it via the service, instead of dedicated request/response DTOs decoupled from the persistence model.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java",
+      "src/main/java/com/example/moodsense/demo/model/Mood.java"
+    ]
+  },
+  {
+    "rule_id": "api_005",
+    "check": "Consistent response envelope",
+    "result": "warn",
+    "detail": "GET endpoints return `ResponseEntity` with explicit status while POST returns `void` with no `ResponseEntity`, so response style is inconsistent across the same controller.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "rule_id": "api_006",
+    "check": "API versioning",
+    "result": "fail",
+    "detail": "No version prefix such as `/api/v1/` on routes; endpoints are rooted at verb-style paths with no global API version segment.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "rule_id": "api_007",
+    "check": "Use of @RestController and proper annotations",
+    "result": "warn",
+    "detail": "`@RestController` is used correctly, but each route uses `@RequestMapping` with `RequestMethod` instead of the more specific `@PostMapping` / `@GetMapping`.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "rule_id": "api_008",
+    "check": "Pagination for list endpoints",
+    "result": "fail",
+    "detail": "`getMoodDistribution` and `getHappyNearByLocations` return full `List` results with no query parameters or paging types (`Pageable`, limit/offset, etc.).",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java",
+      "src/main/java/com/example/moodsense/demo/service/MoodService.java"
+    ]
+  },
+  {
+    "rule_id": "api_009",
+    "check": "No business logic in controllers",
+    "result": "pass",
+    "detail": "Persistence and queries are delegated to `MoodService`. The controller only binds request data (`RemoteUser`, coordinates, status) before calling `save`, which is acceptable orchestration rather than domain rules.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java",
+      "src/main/java/com/example/moodsense/demo/service/MoodService.java"
+    ]
+  },
+  {
+    "rule_id": "api_010",
+    "check": "Swagger/OpenAPI documentation",
+    "result": "fail",
+    "detail": "No Springdoc OpenAPI or springfox dependency in `pom.xml` and no `@Operation`, `@ApiResponse`, or similar documentation annotations on the controller.",
+    "files": [
+      "pom.xml",
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  }
+]

@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MoodSense — Backend R-Analysis Report</title>
+<style>
+  :root {
+    --pass:  #16a34a;
+    --warn:  #d97706;
+    --fail:  #dc2626;
+    --pass-bg: #f0fdf4;
+    --warn-bg: #fffbeb;
+    --fail-bg: #fef2f2;
+    --border: #e5e7eb;
+    --text:  #111827;
+    --muted: #6b7280;
+    --card-bg: #fff;
+    --page-bg: #f9fafb;
+    --header-bg: #1e293b;
+    --header-fg: #f1f5f9;
+    --accent: #3b82f6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: var(--page-bg); color: var(--text); line-height: 1.6; }
+
+  /* ── Header ── */
+  header { background: var(--header-bg); color: var(--header-fg); padding: 2rem 2.5rem; }
+  header h1 { font-size: 1.8rem; font-weight: 700; }
+  header .meta { margin-top: .4rem; font-size: .9rem; color: #94a3b8; }
+
+  /* ── Score Hero ── */
+  .hero { display: flex; gap: 1.5rem; flex-wrap: wrap; padding: 2rem 2.5rem; background: #fff; border-bottom: 1px solid var(--border); }
+  .hero-score { background: var(--fail); color: #fff; border-radius: 1rem; padding: 1.2rem 2rem; min-width: 160px; text-align: center; }
+  .hero-score .big { font-size: 3rem; font-weight: 800; line-height: 1; }
+  .hero-score .label { font-size: .85rem; margin-top: .2rem; opacity: .85; }
+  .hero-pills { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; }
+  .pill { display: inline-flex; align-items: center; gap: .35rem; border-radius: 9999px; padding: .35rem .9rem; font-size: .85rem; font-weight: 600; }
+  .pill-pass { background: var(--pass-bg); color: var(--pass); }
+  .pill-warn { background: var(--warn-bg); color: var(--warn); }
+  .pill-fail { background: var(--fail-bg); color: var(--fail); }
+  .hero-summary { max-width: 600px; font-size: .95rem; color: var(--muted); align-self: center; }
+
+  /* ── R-Decision Banner ── */
+  .r-banner { margin: 1.5rem 2.5rem; background: #1e293b; color: #f1f5f9; border-radius: .75rem; padding: 1.25rem 1.5rem; display: flex; align-items: flex-start; gap: 1rem; }
+  .r-badge { background: #ef4444; color: #fff; border-radius: .5rem; padding: .3rem .8rem; font-size: 1.1rem; font-weight: 800; white-space: nowrap; }
+  .r-text h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: .25rem; }
+  .r-text p { font-size: .9rem; color: #94a3b8; }
+
+  /* ── Category Grid ── */
+  .categories { padding: 0 2.5rem 2.5rem; display: grid; gap: 1.5rem; }
+  .cat-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: .75rem; overflow: hidden; }
+  .cat-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; background: #f8fafc; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .cat-title { font-size: 1rem; font-weight: 700; }
+  .cat-chips { display: flex; gap: .5rem; }
+  .chip { border-radius: 9999px; padding: .2rem .6rem; font-size: .78rem; font-weight: 600; }
+  .chip-pass { background: var(--pass-bg); color: var(--pass); }
+  .chip-warn { background: var(--warn-bg); color: var(--warn); }
+  .chip-fail { background: var(--fail-bg); color: var(--fail); }
+  .cat-score-bar { height: 4px; background: #e5e7eb; }
+  .cat-score-bar-fill { height: 100%; }
+
+  /* ── Finding Rows ── */
+  .finding { display: flex; gap: 1rem; padding: .85rem 1.25rem; border-bottom: 1px solid #f1f5f9; align-items: flex-start; }
+  .finding:last-child { border-bottom: none; }
+  .finding-badge { flex-shrink: 0; width: 52px; text-align: center; border-radius: .4rem; padding: .2rem 0; font-size: .72rem; font-weight: 700; text-transform: uppercase; }
+  .badge-pass { background: var(--pass-bg); color: var(--pass); }
+  .badge-warn { background: var(--warn-bg); color: var(--warn); }
+  .badge-fail { background: var(--fail-bg); color: var(--fail); }
+  .finding-body { flex: 1; }
+  .finding-check { font-weight: 600; font-size: .9rem; }
+  .finding-detail { font-size: .85rem; color: var(--muted); margin-top: .2rem; }
+  .finding-files { margin-top: .3rem; display: flex; flex-wrap: wrap; gap: .3rem; }
+  .file-tag { font-size: .72rem; background: #f1f5f9; color: #475569; border-radius: .3rem; padding: .1rem .4rem; font-family: monospace; }
+  .rule-id { font-size: .7rem; color: #9ca3af; font-family: monospace; }
+
+  /* ── Top Gaps ── */
+  .top-gaps { margin: 0 2.5rem 1.5rem; }
+  .top-gaps h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: .75rem; }
+  .gap-list { display: grid; gap: .5rem; }
+  .gap-item { background: #fff; border: 1px solid var(--border); border-left: 4px solid var(--fail); border-radius: .5rem; padding: .7rem 1rem; font-size: .88rem; }
+  .gap-item strong { display: block; margin-bottom: .15rem; }
+
+  /* ── Category Score Table ── */
+  .score-table { margin: 0 2.5rem 2rem; }
+  .score-table h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: .75rem; }
+  table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid var(--border); border-radius: .5rem; overflow: hidden; font-size: .88rem; }
+  th { text-align: left; padding: .6rem .9rem; background: #f8fafc; border-bottom: 1px solid var(--border); font-weight: 600; color: var(--muted); }
+  td { padding: .6rem .9rem; border-bottom: 1px solid #f9fafb; }
+  tr:last-child td { border-bottom: none; }
+  .bar-cell { width: 140px; }
+  .mini-bar { height: 8px; border-radius: 4px; background: #e5e7eb; }
+  .mini-bar-fill { height: 100%; border-radius: 4px; }
+
+  footer { text-align: center; padding: 1.5rem; font-size: .8rem; color: var(--muted); border-top: 1px solid var(--border); }
+
+  @media (max-width: 640px) {
+    header, .hero, .r-banner, .categories, .top-gaps, .score-table { padding-left: 1rem; padding-right: 1rem; }
+    .r-banner { margin-left: 1rem; margin-right: 1rem; }
+    .top-gaps { margin-left: 1rem; margin-right: 1rem; }
+    .score-table { margin-left: 1rem; margin-right: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>MoodSense — Backend Assessment Report</h1>
+  <div class="meta">Spring Boot 2.7.0 · Java 11 · Spring Security · Spring Data JPA · H2 · Assessed 2026-04-15</div>
+</header>
+
+<!-- Score Hero -->
+<div class="hero">
+  <div class="hero-score">
+    <div class="big">27%</div>
+    <div class="label">5 / 70 pass</div>
+    <div class="label" style="margin-top:.5rem;background:rgba(255,255,255,.15);border-radius:.4rem;padding:.2rem .5rem;">CRITICAL</div>
+  </div>
+  <div class="hero-pills">
+    <span class="pill pill-pass">✓ 5 pass</span>
+    <span class="pill pill-warn">⚠ 28 warn</span>
+    <span class="pill pill-fail">✗ 37 fail</span>
+  </div>
+  <div class="hero-summary">
+    The MoodSense backend is a small Spring Boot demo with significant quality gaps across all seven assessment categories.
+    37 rules fail outright — including a correctness bug in the distance algorithm, hardcoded credentials, global CSRF disabled,
+    missing validation wiring, and no error handling infrastructure. 28 additional warnings indicate patterns that need improvement
+    before the service could be used beyond a demo context.
+  </div>
+</div>
+
+<!-- R-Decision Banner -->
+<div class="r-banner">
+  <div class="r-badge">REBUILD</div>
+  <div class="r-text">
+    <h2>Recommendation: Rebuild / Major Refactor</h2>
+    <p>
+      With a 27% pass rate and critical failures in every category — security, correctness, validation, error handling, API design,
+      and data access — the codebase in its current form is not suitable for production deployment.
+      The issues are not isolated; they stem from foundational architectural shortcuts
+      (in-memory auth, no DTOs, no exception handling, hardcoded credentials, broken distance logic)
+      that would require a near-complete rewrite to address systematically.
+      For a greenfield or early-stage project this is the appropriate path rather than incremental patching.
+    </p>
+  </div>
+</div>
+
+<!-- Category Score Table -->
+<div class="score-table">
+  <h2>Category Scores</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Category</th>
+        <th>Pass</th>
+        <th>Warn</th>
+        <th>Fail</th>
+        <th>Total</th>
+        <th class="bar-cell">Pass Rate</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>API Design</strong></td>
+        <td style="color:var(--pass);font-weight:600">2</td>
+        <td style="color:var(--warn);font-weight:600">3</td>
+        <td style="color:var(--fail);font-weight:600">5</td>
+        <td>10</td>
+        <td class="bar-cell"><div class="mini-bar"><div class="mini-bar-fill" style="width:20%;background:var(--fail)"></div></div> <span style="font-size:.75rem;color:var(--muted)">20%</span></td>
+      </tr>
+      <tr>
+        <td><strong>Domain Structure</strong></td>
+        <td style="color:var(--pass);font-weight:600">2</td>
+        <td style="color:var(--warn);font-weight:600">4</td>
+        <td style="color:var(--fail);font-weight:600">4</td>
+        <td>10</td>
+        <td class="bar-cell"><div class="mini-bar"><div class="mini-bar-fill" style="width:20%;background:var(--fail)"></div></div> <span style="font-size:.75rem;color:var(--muted)">20%</span></td>
+      </tr>
+      <tr>
+        <td><strong>Business Logic</strong></td>
+        <td style="color:var(--pass);font-weight:600">0</td>
+        <td style="color:var(--warn);font-weight:600">4</td>
+        <td style="color:var(--fail);font-weight:600">6</td>
+        <td>10</td>
+        <td class="bar-cell"><div class="mini-bar"><div class="mini-bar-fill" style="width:0%;background:var(--fail)"></div></div> <span style="font-size:.75rem;color:var(--muted)">0%</span></td>
+      </tr>
+      <tr>
+        <td><strong>Data Access</strong></td>
+        <td style="color:var(--pass);font-weight:600">1</td>
+        <td style="color:var(--warn);font-weight:600">7</td>
+        <td style="color:var(--fail);font-weight:600">2</td>
+        <td>10</td>
+        <td class="bar-cell"><div class="mini-bar"><div class="mini-bar-fill" style="width:10%;background:var(--warn)"></div></div> <span style="font-size:.75rem;color:var(--muted)">10%</span></td>
+      </tr>
+      <tr>
+        <td><strong>Authentication</strong></td>
+        <td style="color:var(--pass);font-weight:600">0</td>
+        <td style="color:var(--warn);font-weight:600">5</td>
+        <td style="color:var(--fail);font-weight:600">5</td>
+        <td>10</td>
+        <td class="bar-cell"><div class="mini-bar"><div class="mini-bar-fill" style="width:0%;background:var(--fail)"></div></div> <span style="font-size:.75rem;color:var(--muted)">0%</span></td>
+      </tr>
+      <tr>
+        <td><strong>Validation</strong></td>
+        <td style="color:var(--pass);font-weight:600">0</td>
+        <td style="color:var(--warn);font-weight:600">3</td>
+        <td style="color:var(--fail);font-weight:600">7</td>
+        <td>10</td>
+        <td class="bar-cell"><div class="mini-bar"><div class="mini-bar-fill" style="width:0%;background:var(--fail)"></div></div> <span style="font-size:.75rem;color:var(--muted)">0%</span></td>
+      </tr>
+      <tr>
+        <td><strong>Error Handling</strong></td>
+        <td style="color:var(--pass);font-weight:600">0</td>
+        <td style="color:var(--warn);font-weight:600">2</td>
+        <td style="color:var(--fail);font-weight:600">8</td>
+        <td>10</td>
+        <td class="bar-cell"><div class="mini-bar"><div class="mini-bar-fill" style="width:0%;background:var(--fail)"></div></div> <span style="font-size:.75rem;color:var(--muted)">0%</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Top Gaps -->
+<div class="top-gaps">
+  <h2>Critical Gaps (Highest Priority Fixes)</h2>
+  <div class="gap-list">
+    <div class="gap-item">
+      <strong>🐛 biz_001 — Distance Calculation Bug</strong>
+      <code>getBestLocationFromCoordinate</code> uses <code>location.getLatitude()</code> twice instead of <code>latitude – latitude</code> and <code>longitude – longitude</code>, producing wrong nearest-location results. This is a correctness bug that silently returns wrong data.
+    </div>
+    <div class="gap-item">
+      <strong>🔐 auth_002 — Hardcoded Credentials in Source</strong>
+      Usernames and passwords (user1/pwd1, user2/pwd2) are embedded in <code>SpringSecurityConfig.java</code> and will be committed to version control. Use environment variables or a secrets manager.
+    </div>
+    <div class="gap-item">
+      <strong>🔐 auth_009 — H2 Console Unauthenticated</strong>
+      <code>/h2-console/**</code> is <code>permitAll</code> with CSRF bypassed, exposing full database access without login to any caller who can reach the host.
+    </div>
+    <div class="gap-item">
+      <strong>🔐 auth_003 — Global CSRF Disabled</strong>
+      <code>csrf().disable()</code> is applied application-wide, eliminating cross-site request forgery protection for all state-changing endpoints.
+    </div>
+    <div class="gap-item">
+      <strong>⚡ biz_005 / da_004 — N+1 Query in getHappyNearByLocations</strong>
+      <code>getAllLocations()</code> is called once per happy coordinate inside a loop. Load the location list once before the loop.
+    </div>
+    <div class="gap-item">
+      <strong>❌ val_001–val_004 — Validation Not Wired</strong>
+      Bean Validation constraints on <code>Mood</code> are never triggered: the entity parameter has no <code>@Valid</code>, <code>@NotNull</code> on primitive <code>int</code> fields has no effect, and there is no global <code>MethodArgumentNotValidException</code> handler.
+    </div>
+    <div class="gap-item">
+      <strong>❌ err_001–err_008 — No Error Handling Infrastructure</strong>
+      No <code>@RestControllerAdvice</code>, no custom exceptions, no error response DTO, no logging, and <code>uploadMood</code> returns void with no status code. The entire error layer is missing.
+    </div>
+    <div class="gap-item">
+      <strong>🔗 biz_009 / da_002 — Repository ID Type Mismatch</strong>
+      <code>MoodRepository</code> extends <code>CrudRepository&lt;Mood, String&gt;</code> but <code>Mood.id</code> is a primitive <code>int</code>. This breaks <code>findById</code>, <code>deleteById</code>, and other type-safe methods.
+    </div>
+  </div>
+</div>
+
+<!-- Category Detail Cards -->
+<div class="categories">
+
+  <!-- API Design -->
+  <div class="cat-card">
+    <div class="cat-header">
+      <span class="cat-title">API Design</span>
+      <div class="cat-chips">
+        <span class="chip chip-pass">2 pass</span>
+        <span class="chip chip-warn">3 warn</span>
+        <span class="chip chip-fail">5 fail</span>
+      </div>
+    </div>
+    <div class="cat-score-bar"><div class="cat-score-bar-fill" style="width:20%;background:var(--fail)"></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">REST resource naming <span class="rule-id">api_001</span></div><div class="finding-detail">Paths are verb-oriented camelCase (/uploadMood, /getMoodDistribution, /getHappyNearByLocations) instead of noun-based, plural, lowercase-hyphenated resources (e.g. /moods, /moods/distribution).</div><div class="finding-files"><span class="file-tag">controller/MoodSenseController.java</span></div></div></div>
+    <div class="finding"><div class="finding-badge badge-pass">PASS</div><div class="finding-body"><div class="finding-check">HTTP method usage <span class="rule-id">api_002</span></div><div class="finding-detail">Read operations use GET and the create/upload flow uses POST, which matches typical usage for these operations.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-warn">WARN</div><div class="finding-body"><div class="finding-check">Response status codes <span class="rule-id">api_003</span></div><div class="finding-detail">POST uploadMood returns void, so Spring defaults to 200 OK rather than 201 Created. No explicit 404/400 error mappings.</div><div class="finding-files"><span class="file-tag">controller/MoodSenseController.java</span></div></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">Request/Response DTOs <span class="rule-id">api_004</span></div><div class="finding-detail">The controller accepts the JPA entity Mood directly as a request parameter and persists it, instead of using dedicated request/response DTOs decoupled from the persistence model.</div><div class="finding-files"><span class="file-tag">controller/MoodSenseController.java</span><span class="file-tag">model/Mood.java</span></div></div></div>
+    <div class="finding"><div class="finding-badge badge-warn">WARN</div><div class="finding-body"><div class="finding-check">Consistent response envelope <span class="rule-id">api_005</span></div><div class="finding-detail">GET endpoints return ResponseEntity with explicit status while POST returns void — inconsistent response style across the same controller.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">API versioning <span class="rule-id">api_006</span></div><div class="finding-detail">No version prefix such as /api/v1/ on routes; endpoints have no global API version segment, making future breaking changes difficult.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-warn">WARN</div><div class="finding-body"><div class="finding-check">Use of @RestController and proper annotations <span class="rule-id">api_007</span></div><div class="finding-detail">@RestController is used correctly, but each route uses verbose @RequestMapping(method=RequestMethod.X) instead of @PostMapping/@GetMapping shorthand.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">Pagination for list endpoints <span class="rule-id">api_008</span></div><div class="finding-detail">getMoodDistribution and getHappyNearByLocations return full List results with no Pageable, limit/offset, or cursor parameters.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-pass">PASS</div><div class="finding-body"><div class="finding-check">No business logic in controllers <span class="rule-id">api_009</span></div><div class="finding-detail">Persistence and queries are correctly delegated to MoodService. The controller only binds request data before calling the service.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">Swagger/OpenAPI documentation <span class="rule-id">api_010</span></div><div class="finding-detail">No Springdoc OpenAPI or springfox dependency and no @Operation / @ApiResponse annotations. The API is undocumented.</div><div class="finding-files"><span class="file-tag">pom.xml</span><span class="file-tag">controller/MoodSenseController.java</span></div></div></div>
+  </div>
+
+  <!-- Domain Structure -->
+  <div class="cat-card">
+    <div class="cat-header">
+      <span class="cat-title">Domain Structure</span>
+      <div class="cat-chips">
+        <span class="chip chip-pass">2 pass</span>
+        <span class="chip chip-warn">4 warn</span>
+        <span class="chip chip-fail">4 fail</span>
+      </div>
+    </div>
+    <div class="cat-score-bar"><div class="cat-score-bar-fill" style="width:20%;background:var(--fail)"></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">Package naming convention <span class="rule-id">dom_001</span></div><div class="finding-detail">Persistence package is named <code>repositary</code> — a typo for <code>repository</code>. Breaks conventions and will confuse maintainers and search tooling.</div><div class="finding-files"><span class="file-tag">repositary/MoodRepository.java</span></div></div></div>
+    <div class="finding"><div class="finding-badge badge-pass">PASS</div><div class="finding-body"><div class="finding-check">Separation of concerns <span class="rule-id">dom_002</span></div><div class="finding-detail">Distinct packages for controller, service, persistence, and model types. Controller delegates to MoodService rather than calling the repository directly.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-warn">WARN</div><div class="finding-body"><div class="finding-check">Domain model richness <span class="rule-id">dom_003</span></div><div class="finding-detail">Entities are Lombok @Data data carriers with no behavior — classic anemic domain model. Business rules live entirely in the service layer.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">Entity design <span class="rule-id">dom_004</span></div><div class="finding-detail">Entities lack audit fields (createdAt/updatedAt). Mood uses primitive int for @GeneratedValue while MoodRepository declares String as the ID type — a mismatch. Lombok @Data on @Entity is risky for equals/hashCode.</div><div class="finding-files"><span class="file-tag">model/Mood.java</span><span class="file-tag">repositary/MoodRepository.java</span></div></div></div>
+    <div class="finding"><div class="finding-badge badge-warn">WARN</div><div class="finding-body"><div class="finding-check">Value objects <span class="rule-id">dom_005</span></div><div class="finding-detail">Coordinate is a Spring Data projection interface rather than a proper immutable value object (record or final class with encapsulated validation).</div></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">DTO separation <span class="rule-id">dom_006</span></div><div class="finding-detail">The REST controller accepts and mutates the Mood JPA entity directly, tightly coupling the HTTP API to the persistence model.</div><div class="finding-files"><span class="file-tag">controller/MoodSenseController.java</span><span class="file-tag">model/Mood.java</span></div></div></div>
+    <div class="finding"><div class="finding-badge badge-pass">PASS</div><div class="finding-body"><div class="finding-check">Interface-driven design <span class="rule-id">dom_007</span></div><div class="finding-detail">MoodService is a dedicated interface with a Spring @Service implementation — correctly follows interface-driven service design.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-warn">WARN</div><div class="finding-body"><div class="finding-check">Naming conventions <span class="rule-id">dom_008</span></div><div class="finding-detail">Minor issues: getHappyNearByLocations has an awkward NearBy segment; MoodServiceImplementation is verbose. Misspelled package name covered separately.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-warn">WARN</div><div class="finding-body"><div class="finding-check">Single Responsibility <span class="rule-id">dom_009</span></div><div class="finding-detail">MoodServiceImplementation mixes application orchestration with spatial matching concerns (Euclidean distance). A dedicated LocationMatcher component would improve cohesion.</div><div class="finding-files"><span class="file-tag">service/MoodServiceImplementation.java</span></div></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">Application entry point <span class="rule-id">dom_010</span></div><div class="finding-detail">Main class named DemoApplication instead of MoodSenseApplication, obscuring the real application identity in logs and documentation.</div><div class="finding-files"><span class="file-tag">DemoApplication.java</span></div></div></div>
+  </div>
+
+  <!-- Business Logic -->
+  <div class="cat-card">
+    <div class="cat-header">
+      <span class="cat-title">Business Logic</span>
+      <div class="cat-chips">
+        <span class="chip chip-pass">0 pass</span>
+        <span class="chip chip-warn">4 warn</span>
+        <span class="chip chip-fail">6 fail</span>
+      </div>
+    </div>
+    <div class="cat-score-bar"><div class="cat-score-bar-fill" style="width:0%;background:var(--fail)"></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">Logic correctness — Distance Bug <span class="rule-id">biz_001</span></div><div class="finding-detail"><strong>Critical bug:</strong> <code>getBestLocationFromCoordinate</code> computes <code>Math.pow(location.getLatitude() - coordinate.getLongitude(), 2)</code> in the second term, using <em>latitude</em> instead of <em>longitude</em>. This breaks the Euclidean distance and returns the wrong nearest location.</div><div class="finding-files"><span class="file-tag">service/MoodServiceImplementation.java</span></div></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">Transaction management <span class="rule-id">biz_002</span></div><div class="finding-detail">No @Transactional on service methods. Write paths should declare explicit transaction boundaries for rollback rules and propagation control.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-warn">WARN</div><div class="finding-body"><div class="finding-check">Service layer completeness <span class="rule-id">biz_003</span></div><div class="finding-detail">uploadMood assembles the Mood entity in the controller (person, coordinates, status) before calling save. A dedicated service method would centralize invariants and keep the controller transport-only.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">Null safety <span class="rule-id">biz_004</span></div><div class="finding-detail">getBestLocationFromCoordinate returns null when no locations exist. getLocationsFromCoordinates adds it to the result List without checking, surfacing null elements to API clients.</div><div class="finding-files"><span class="file-tag">service/MoodServiceImplementation.java</span></div></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">Performance — N+1 queries <span class="rule-id">biz_005</span></div><div class="finding-detail">getAllLocations() is called once per happy coordinate inside the loop in getLocationsFromCoordinates, reloading all locations from the database N times instead of once.</div><div class="finding-files"><span class="file-tag">service/MoodServiceImplementation.java</span></div></div></div>
+    <div class="finding"><div class="finding-badge badge-warn">WARN</div><div class="finding-body"><div class="finding-check">Magic values <span class="rule-id">biz_006</span></div><div class="finding-detail">getAllHappyCoordinates uses the string literal <code>'HAPPY'</code> in JPQL. Prefer a bind parameter typed as MoodStatus so enum renames are caught at compile time.</div><div class="finding-files"><span class="file-tag">repositary/MoodRepository.java</span></div></div></div>
+    <div class="finding"><div class="finding-badge badge-warn">WARN</div><div class="finding-body"><div class="finding-check">Immutability and side-effects <span class="rule-id">biz_007</span></div><div class="finding-detail">getHappyNearByLocations appears to be a pure read but triggers repeated repository reads (getAllLocations per coordinate), causing hidden I/O at each call.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">Method visibility <span class="rule-id">biz_008</span></div><div class="finding-detail">getLocationsFromCoordinates and getBestLocationFromCoordinate are public but only used internally. They should be private to avoid expanding the service API surface.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">Repository ID type mismatch <span class="rule-id">biz_009</span></div><div class="finding-detail">MoodRepository extends CrudRepository&lt;Mood, String&gt; but Mood.id is a primitive int. This breaks type-safe repository methods (findById, deleteById).</div><div class="finding-files"><span class="file-tag">repositary/MoodRepository.java</span><span class="file-tag">model/Mood.java</span></div></div></div>
+    <div class="finding"><div class="finding-badge badge-warn">WARN</div><div class="finding-body"><div class="finding-check">Input sanitization <span class="rule-id">biz_010</span></div><div class="finding-detail">@Validated on @RequestParam does not fully validate the Mood object. request.getRemoteUser() is not validated or normalized. No domain-level range checks in the service.</div></div></div>
+  </div>
+
+  <!-- Data Access -->
+  <div class="cat-card">
+    <div class="cat-header">
+      <span class="cat-title">Data Access</span>
+      <div class="cat-chips">
+        <span class="chip chip-pass">1 pass</span>
+        <span class="chip chip-warn">7 warn</span>
+        <span class="chip chip-fail">2 fail</span>
+      </div>
+    </div>
+    <div class="cat-score-bar"><div class="cat-score-bar-fill" style="width:10%;background:var(--warn)"></div></div>
+    <div class="finding"><div class="finding-badge badge-warn">WARN</div><div class="finding-body"><div class="finding-check">Repository extends appropriate interface <span class="rule-id">da_001</span></div><div class="finding-detail">CrudRepository is valid but JpaRepository is more idiomatic for Spring Data JPA, adding flush, batch delete helpers, and List return types. The larger issue is the ID type mismatch.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">Entity ID type consistency <span class="rule-id">da_002</span></div><div class="finding-detail">Mood.id is primitive int but MoodRepository is CrudRepository&lt;Mood, String&gt;. The mismatch breaks type-safe repository operations like findById and deleteById.</div><div class="finding-files"><span class="file-tag">repositary/MoodRepository.java</span><span class="file-tag">model/Mood.java</span></div></div></div>
+    <div class="finding"><div class="finding-badge badge-warn">WARN</div><div class="finding-body"><div class="finding-check">Use of production-grade database <span class="rule-id">da_003</span></div><div class="finding-detail">H2 in-memory is suitable only for demos/testing — no durability across restarts, limited operational tooling. A production deployment requires a managed RDBMS.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">N+1 query problem <span class="rule-id">da_004</span></div><div class="finding-detail">getAllLocations() is called inside a for loop in the service, executing N identical full-table-scan queries. Load the location list once and reuse it in memory.</div><div class="finding-files"><span class="file-tag">service/MoodServiceImplementation.java</span></div></div></div>
+    <div class="finding"><div class="finding-badge badge-warn">WARN</div><div class="finding-body"><div class="finding-check">Query hardcoded enum string <span class="rule-id">da_005</span></div><div class="finding-detail">getAllHappyCoordinates uses <code>moodStatus = 'HAPPY'</code> as a JPQL literal. Prefer a bind parameter typed as MoodStatus to avoid silent breakage on enum renames.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-warn">WARN</div><div class="finding-body"><div class="finding-check">Proper use of @Transactional <span class="rule-id">da_006</span></div><div class="finding-detail">No @Transactional on service layer. Read-only methods should use @Transactional(readOnly = true) for optimization; multi-step workflows need explicit propagation.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-pass">PASS</div><div class="finding-body"><div class="finding-check">Fetch strategy <span class="rule-id">da_007</span></div><div class="finding-detail">Entities Mood and Location have scalar fields only; no associations requiring explicit LAZY/EAGER configuration. No fetch strategy misconfiguration applies.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-warn">WARN</div><div class="finding-body"><div class="finding-check">Database migration tool <span class="rule-id">da_008</span></div><div class="finding-detail">No Flyway or Liquibase; schema managed by JPA ddl-auto defaults. Versioned migrations are required for production schema management.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-warn">WARN</div><div class="finding-body"><div class="finding-check">Connection pool configuration <span class="rule-id">da_009</span></div><div class="finding-detail">No explicit HikariCP settings. Spring Boot defaults to HikariCP, but production workloads require tuned max pool size, connection timeout, and leak detection.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-warn">WARN</div><div class="finding-body"><div class="finding-check">Repository naming <span class="rule-id">da_010</span></div><div class="finding-detail">Package name <code>repositary</code> is a typo — should be <code>repository</code>.</div><div class="finding-files"><span class="file-tag">repositary/MoodRepository.java</span></div></div></div>
+  </div>
+
+  <!-- Authentication -->
+  <div class="cat-card">
+    <div class="cat-header">
+      <span class="cat-title">Authentication &amp; Authorization</span>
+      <div class="cat-chips">
+        <span class="chip chip-pass">0 pass</span>
+        <span class="chip chip-warn">5 warn</span>
+        <span class="chip chip-fail">5 fail</span>
+      </div>
+    </div>
+    <div class="cat-score-bar"><div class="cat-score-bar-fill" style="width:0%;background:var(--fail)"></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">In-memory user store <span class="rule-id">auth_001</span></div><div class="finding-detail">InMemoryUserDetailsManager with static users is only for demos. Production needs a managed user store with lifecycle controls, auditing, and credential rotation.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">Hardcoded credentials <span class="rule-id">auth_002</span></div><div class="finding-detail">Usernames and plaintext passwords (user1/pwd1, user2/pwd2) are embedded in source code and will leak through version control.</div><div class="finding-files"><span class="file-tag">config/SpringSecurityConfig.java</span></div></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">CSRF protection disabled <span class="rule-id">auth_003</span></div><div class="finding-detail">csrf().disable() is applied globally. This weakens protection for any future browser-based state-changing flows.</div><div class="finding-files"><span class="file-tag">config/SpringSecurityConfig.java</span></div></div></div>
+    <div class="finding"><div class="finding-badge badge-warn">WARN</div><div class="finding-body"><div class="finding-check">WebSecurityConfigurerAdapter deprecation <span class="rule-id">auth_004</span></div><div class="finding-detail">Extends the deprecated WebSecurityConfigurerAdapter (deprecated in Spring Security 5.7+). Should migrate to SecurityFilterChain bean-style configuration.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-warn">WARN</div><div class="finding-body"><div class="finding-check">HTTP Basic authentication <span class="rule-id">auth_005</span></div><div class="finding-detail">HTTP Basic transmits credentials on every request. Token-based flows (OAuth2/OIDC, JWT) reduce replay exposure and enable richer policy for APIs.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">Password strength <span class="rule-id">auth_006</span></div><div class="finding-detail">Passwords pwd1 and pwd2 are trivially guessable. Even with BCrypt, weak passwords remain vulnerable to offline guessing if the hash database is exposed.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-warn">WARN</div><div class="finding-body"><div class="finding-check">Role-based access control granularity <span class="rule-id">auth_007</span></div><div class="finding-detail">Single ROLE_USER for all routes — no separation of duties, resource-owner checks, or scopes. Authorization will not scale as roles or data ownership rules grow.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-warn">WARN</div><div class="finding-body"><div class="finding-check">Authentication identity usage <span class="rule-id">auth_008</span></div><div class="finding-detail">Controller uses HttpServletRequest.getRemoteUser(). SecurityContextHolder.getContext().getAuthentication() is the idiomatic Spring approach and avoids subtle mismatches.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">H2 console exposed <span class="rule-id">auth_009</span></div><div class="finding-detail">/h2-console/** is permitAll with CSRF ignored, allowing unauthenticated access to the embedded database. A serious risk in any network-exposed deployment.</div><div class="finding-files"><span class="file-tag">config/SpringSecurityConfig.java</span></div></div></div>
+    <div class="finding"><div class="finding-badge badge-warn">WARN</div><div class="finding-body"><div class="finding-check">No method-level security <span class="rule-id">auth_010</span></div><div class="finding-detail">No @PreAuthorize, @PostAuthorize, or @Secured annotations. All enforcement is URL-based; service-layer entry points get no declarative authorization checks.</div></div></div>
+  </div>
+
+  <!-- Validation -->
+  <div class="cat-card">
+    <div class="cat-header">
+      <span class="cat-title">Validation</span>
+      <div class="cat-chips">
+        <span class="chip chip-pass">0 pass</span>
+        <span class="chip chip-warn">3 warn</span>
+        <span class="chip chip-fail">7 fail</span>
+      </div>
+    </div>
+    <div class="cat-score-bar"><div class="cat-score-bar-fill" style="width:0%;background:var(--fail)"></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">@Valid vs @Validated usage <span class="rule-id">val_001</span></div><div class="finding-detail">@Validated on individual @RequestParam arguments does not validate a command object. The Mood parameter has no @Valid at all. Idiomatic pattern: @Valid on a @RequestBody DTO.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">Request body validation <span class="rule-id">val_002</span></div><div class="finding-detail">POST /uploadMood uses discrete @RequestParam instead of a single @RequestBody with @Valid, bypassing model-level Bean Validation entirely.</div><div class="finding-files"><span class="file-tag">controller/MoodSenseController.java</span><span class="file-tag">model/Mood.java</span></div></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">Validation annotations on primitives <span class="rule-id">val_003</span></div><div class="finding-detail">latitude and longitude are primitive int; @NotNull cannot apply to primitives (they can never be null). Only @Min/@Max are effective. Use Integer wrappers or a DTO.</div><div class="finding-files"><span class="file-tag">model/Mood.java</span></div></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">Entity-level validation triggered <span class="rule-id">val_004</span></div><div class="finding-detail">uploadMood does not annotate the Mood parameter with @Valid, so Bean Validation constraints on Mood are never evaluated during request handling.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-warn">WARN</div><div class="finding-body"><div class="finding-check">person field validation <span class="rule-id">val_005</span></div><div class="finding-detail">Mood.person has no @NotBlank/@NotNull. Assigned from request.getRemoteUser() which may return null, allowing empty identity to be persisted.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">moodStatus field validation <span class="rule-id">val_006</span></div><div class="finding-detail">moodStatus in Mood has no @NotNull, allowing a null enum value to be persisted from code paths other than the controller.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-warn">WARN</div><div class="finding-body"><div class="finding-check">Custom validation messages quality <span class="rule-id">val_007</span></div><div class="finding-detail">@NotNull messages include "Demo purpose" — inappropriate for production-facing APIs and user-visible error text.</div><div class="finding-files"><span class="file-tag">model/Mood.java</span></div></div></div>
+    <div class="finding"><div class="finding-badge badge-warn">WARN</div><div class="finding-body"><div class="finding-check">Validation on service layer <span class="rule-id">val_008</span></div><div class="finding-detail">MoodServiceImplementation.save has no javax.validation usage or manual checks — no defense-in-depth validation beyond the (currently ineffective) web layer.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">Global validation exception handling <span class="rule-id">val_009</span></div><div class="finding-detail">No @ControllerAdvice or @ExceptionHandler for MethodArgumentNotValidException; validation failures are not mapped to consistent API error responses.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">@NotBlank on enum field <span class="rule-id">val_010</span></div><div class="finding-detail">MoodStatus declares @NotBlank on a private String field inside the enum — non-standard, easy to misunderstand, and does not validate the enum value on the request or entity.</div><div class="finding-files"><span class="file-tag">model/MoodStatus.java</span></div></div></div>
+  </div>
+
+  <!-- Error Handling -->
+  <div class="cat-card">
+    <div class="cat-header">
+      <span class="cat-title">Error Handling</span>
+      <div class="cat-chips">
+        <span class="chip chip-pass">0 pass</span>
+        <span class="chip chip-warn">2 warn</span>
+        <span class="chip chip-fail">8 fail</span>
+      </div>
+    </div>
+    <div class="cat-score-bar"><div class="cat-score-bar-fill" style="width:0%;background:var(--fail)"></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">Global exception handler <span class="rule-id">err_001</span></div><div class="finding-detail">No @RestControllerAdvice or @ControllerAdvice. All exception handling relies entirely on Spring Boot defaults, producing uncontrolled error responses.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">Consistent error response format <span class="rule-id">err_002</span></div><div class="finding-detail">No shared error response DTO (message, timestamp, path, status). Errors are not returned in a predictable, client-friendly JSON shape.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">Null return handling <span class="rule-id">err_003</span></div><div class="finding-detail">getBestLocationFromCoordinate can return null; getLocationsFromCoordinates adds it to the list without a null check, surfacing null elements and potential NullPointerException for consumers.</div><div class="finding-files"><span class="file-tag">service/MoodServiceImplementation.java</span></div></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">void endpoint response <span class="rule-id">err_004</span></div><div class="finding-detail">uploadMood returns void with no explicit HTTP status, defaulting to 200 OK. A resource-creating POST should return 201 Created with a location header or body.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">No custom exceptions <span class="rule-id">err_005</span></div><div class="finding-detail">No domain-specific exceptions anywhere in the codebase. Business and persistence failures cannot be mapped to distinct HTTP semantics without custom exception types.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">Database error handling <span class="rule-id">err_006</span></div><div class="finding-detail">No handling for DataIntegrityViolationException or other JPA exceptions. Constraint violations and persistence errors are not translated into controlled API errors.</div><div class="finding-files"><span class="file-tag">service/MoodServiceImplementation.java</span></div></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">Inconsistent ResponseEntity usage <span class="rule-id">err_007</span></div><div class="finding-detail">uploadMood returns void while GET endpoints return ResponseEntity. Inconsistent contract across the same controller makes client integration harder.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-fail">FAIL</div><div class="finding-body"><div class="finding-check">Logging <span class="rule-id">err_008</span></div><div class="finding-detail">No SLF4J Logger, @Slf4j, or LoggerFactory in the controller or service. Errors and important operations are entirely unlogged, making diagnostics and security auditing impossible.</div><div class="finding-files"><span class="file-tag">controller/MoodSenseController.java</span><span class="file-tag">service/MoodServiceImplementation.java</span></div></div></div>
+    <div class="finding"><div class="finding-badge badge-warn">WARN</div><div class="finding-body"><div class="finding-check">Exception propagation <span class="rule-id">err_009</span></div><div class="finding-detail">Service methods don't declare checked exceptions (normal in Spring), but there is no application-level strategy to document failure modes; runtime exceptions propagate unchanged to the framework.</div></div></div>
+    <div class="finding"><div class="finding-badge badge-warn">WARN</div><div class="finding-body"><div class="finding-check">HTTP 500 on unhandled exceptions <span class="rule-id">err_010</span></div><div class="finding-detail">Without a @RestControllerAdvice, unhandled exceptions may expose stack traces to clients depending on server.error.* configuration, particularly in development mode.</div></div></div>
+  </div>
+
+</div>
+
+<footer>MoodSense Backend Assessment · Generated 2026-04-15 · 70 rules · 7 categories</footer>
+</body>
+</html>

@@ -1,0 +1,93 @@
+[
+  {
+    "check": "In-memory user store",
+    "result": "fail",
+    "detail": "Authentication uses InMemoryUserDetailsManager with static user definitions in SpringSecurityConfig. This pattern is appropriate only for demos or local development; production systems need a managed user store (database, directory, or identity provider) with lifecycle controls, auditing, and credential rotation.",
+    "rule_id": "auth_001",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+    ]
+  },
+  {
+    "check": "Hardcoded credentials",
+    "result": "fail",
+    "detail": "Usernames and plaintext password material (pwd1, pwd2) are embedded in source for user1 and user2. Even with BCrypt encoding at runtime, secrets in code leak through version control and builds; credentials should come from secure configuration, secrets management, or external identity systems.",
+    "rule_id": "auth_002",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+    ]
+  },
+  {
+    "check": "CSRF protection disabled",
+    "result": "fail",
+    "detail": "HttpSecurity is configured with csrf().disable() globally for the application. CSRF is disabled only for /h2-console via ignoringAntMatchers, but the second chain turns off CSRF entirely. That weakens protection for any future state-changing browser flows or session-based usage beyond pure stateless Basic clients.",
+    "rule_id": "auth_003",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+    ]
+  },
+  {
+    "check": "WebSecurityConfigurerAdapter deprecation",
+    "result": "warn",
+    "detail": "The security configuration extends WebSecurityConfigurerAdapter, which Spring Security deprecated in 5.7+ in favor of SecurityFilterChain beans and component-style configuration. Spring Boot 2.7.0 still supports it, but this blocks straightforward upgrades to newer Spring Security APIs and should be migrated when upgrading the stack.",
+    "rule_id": "auth_004",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java",
+      "pom.xml"
+    ]
+  },
+  {
+    "check": "HTTP Basic authentication",
+    "result": "warn",
+    "detail": "httpBasic() is enabled, so credentials travel on every request (typically Base64 in the Authorization header). For browser-heavy or mobile apps, token-based flows (OAuth2/OIDC, JWT with proper issuance and validation) are usually preferred to reduce replay exposure and enable richer policy; Basic can be acceptable for simple internal APIs over TLS with strong policies.",
+    "rule_id": "auth_005",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+    ]
+  },
+  {
+    "check": "Password strength",
+    "result": "fail",
+    "detail": "Initial passwords pwd1 and pwd2 are trivially guessable and violate common password policy expectations. Even with BCrypt, weak chosen passwords remain vulnerable to offline guessing if hashes are exposed; enforce strength policy and user-driven password changes.",
+    "rule_id": "auth_006",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+    ]
+  },
+  {
+    "check": "Role-based access control granularity",
+    "result": "warn",
+    "detail": "All secured routes use a single ROLE_USER via hasRole(\"USER\"). There is no separation of duties (e.g., admin vs user), resource-owner checks, or scopes; authorization is coarse and may not scale if roles or data ownership rules grow.",
+    "rule_id": "auth_007",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+    ]
+  },
+  {
+    "check": "Authentication identity usage",
+    "result": "warn",
+    "detail": "MoodSenseController uses HttpServletRequest.getRemoteUser() for the authenticated principal when saving moods and querying distributions. This is valid when populated by the servlet container from Spring Security, but SecurityContextHolder.getContext().getAuthentication() is the idiomatic Spring approach and avoids subtle mismatches if authentication is accessed outside a web request context.",
+    "rule_id": "auth_008",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "check": "H2 console exposed",
+    "result": "fail",
+    "detail": "/h2-console/** is permitAll with CSRF ignored for that path and frameOptions sameOrigin, allowing unauthenticated access to the embedded console. If this profile ships to production or any network-exposed environment, it exposes database administration and is a serious risk; restrict by profile, IP, or remove entirely outside dev.",
+    "rule_id": "auth_009",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+    ]
+  },
+  {
+    "check": "No method-level security",
+    "result": "warn",
+    "detail": "There are no @PreAuthorize, @PostAuthorize, @Secured, or equivalent method-security annotations in the codebase, and no @EnableGlobalMethodSecurity / @EnableMethodSecurity. All enforcement is URL-based only, so service-layer entry points or future internal callers would not get declarative authorization checks.",
+    "rule_id": "auth_010",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  }
+]

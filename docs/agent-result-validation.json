@@ -1,0 +1,96 @@
+[
+  {
+    "rule_id": "val_001",
+    "check": "@Valid vs @Validated usage",
+    "result": "fail",
+    "detail": "MoodSenseController applies @Validated only to individual @RequestParam arguments. Spring does not validate simple request parameters this way in the same manner as a validated command object; the idiomatic pattern is @Valid on a @RequestBody DTO (or class-level @Validated with groups). The unannotated Mood parameter is not validated at all.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "rule_id": "val_002",
+    "check": "Request body validation",
+    "result": "fail",
+    "detail": "POST /uploadMood binds a bare Mood model plus discrete @RequestParam values instead of a single @RequestBody object with @Valid. Model-level Bean Validation on Mood is therefore not driven by the HTTP binding pipeline for the request as a whole.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java",
+      "src/main/java/com/example/moodsense/demo/model/Mood.java"
+    ]
+  },
+  {
+    "rule_id": "val_003",
+    "check": "Validation annotations on primitives",
+    "result": "fail",
+    "detail": "latitude and longitude are primitive int fields. @NotNull from javax.validation.constraints.NotNull does not apply meaningfully to primitives (they cannot be null); only @Min/@Max are effective. The intended constraint should use Integer/wrapper types or a DTO if nullability matters.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/model/Mood.java"
+    ]
+  },
+  {
+    "rule_id": "val_004",
+    "check": "Entity-level validation triggered",
+    "result": "fail",
+    "detail": "The uploadMood method does not annotate the Mood parameter with @Valid (or @Validated). Even if validation were enabled on the controller, constraints declared on Mood would not be evaluated for that parameter during request handling.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java",
+      "src/main/java/com/example/moodsense/demo/model/Mood.java"
+    ]
+  },
+  {
+    "rule_id": "val_005",
+    "check": "person field validation",
+    "result": "warn",
+    "detail": "Mood.person has no size, null, or blank constraints. It is assigned from HttpServletRequest.getRemoteUser(), which may be null for unauthenticated callers, so empty or missing identity is not rejected at the validation layer.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/model/Mood.java",
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "rule_id": "val_006",
+    "check": "moodStatus field validation",
+    "result": "fail",
+    "detail": "The moodStatus field on Mood has no @NotNull. While the controller sets it from a request parameter, the entity itself allows a null moodStatus if persisted from other code paths or if binding changes.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/model/Mood.java",
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "rule_id": "val_007",
+    "check": "Custom validation messages quality",
+    "result": "warn",
+    "detail": "@NotNull messages on latitude and longitude include the phrase \"Demo purpose\", which is inappropriate for production-facing APIs and user-visible error text.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/model/Mood.java"
+    ]
+  },
+  {
+    "rule_id": "val_008",
+    "check": "Validation on service layer",
+    "result": "warn",
+    "detail": "MoodServiceImplementation.save delegates directly to the repository with no javax.validation Validator usage, @Validated method parameters, or manual checks—no defense-in-depth validation beyond the (currently ineffective) web layer.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java"
+    ]
+  },
+  {
+    "rule_id": "val_009",
+    "check": "Global validation exception handling",
+    "result": "fail",
+    "detail": "No @ControllerAdvice or @ExceptionHandler for MethodArgumentNotValidException (or related bind/constraint exceptions) exists in the codebase, so validation failures would not be mapped to consistent API error responses.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "rule_id": "val_010",
+    "check": "@NotBlank on enum field",
+    "result": "fail",
+    "detail": "MoodStatus declares @NotBlank on a private String field inside the enum. Enum constants are not validated through typical request DTO binding; this pattern is non-standard, easy to misunderstand, and does not replace validating the chosen enum value on the request or entity.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/model/MoodStatus.java"
+    ]
+  }
+]
