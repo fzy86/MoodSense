@@ -1,0 +1,96 @@
+[
+  {
+    "rule_id": "biz_001",
+    "check": "Logic correctness",
+    "result": "fail",
+    "detail": "Nearest-location distance in getBestLocationFromCoordinate is wrong: the second squared term uses location.getLatitude() minus coordinate.getLongitude() instead of location.getLongitude() minus coordinate.getLongitude(). That breaks the intended Euclidean distance in the lat/long plane and can pick the wrong Location.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java"
+    ]
+  },
+  {
+    "rule_id": "biz_002",
+    "check": "Transaction management",
+    "result": "fail",
+    "detail": "MoodServiceImplementation.save delegates to the repository but neither the service method nor the interface is annotated with @Transactional. For consistency and clear transactional boundaries on writes (rollback rules, propagation), the save path should declare an explicit transaction at the service layer.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java",
+      "src/main/java/com/example/moodsense/demo/service/MoodService.java"
+    ]
+  },
+  {
+    "rule_id": "biz_003",
+    "check": "Service layer completeness",
+    "result": "warn",
+    "detail": "uploadMood in the controller assembles the Mood (person from request, coordinates, status) before calling moodService.save. That orchestration is thin but still couples HTTP concerns to entity construction; a dedicated service method (e.g. recordMood) would keep the controller as transport-only and centralize invariants.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java",
+      "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java"
+    ]
+  },
+  {
+    "rule_id": "biz_004",
+    "check": "Null safety",
+    "result": "fail",
+    "detail": "getHappyNearByLocations and getLocationsFromCoordinates do not guard against a null remoteUser or null coordinate list. getBestLocationFromCoordinate returns null when there are no Location rows (or no improvement), but getLocationsFromCoordinates still adds that null to the result list, which can surface null elements to API clients.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java"
+    ]
+  },
+  {
+    "rule_id": "biz_005",
+    "check": "Performance - N+1 queries",
+    "result": "fail",
+    "detail": "getBestLocationFromCoordinate calls moodRepository.getAllLocations() inside its loop, and getLocationsFromCoordinates invokes getBestLocationFromCoordinate once per happy coordinate. That reloads all locations from the database for every coordinate instead of loading the location list once and reusing it.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java"
+    ]
+  },
+  {
+    "rule_id": "biz_006",
+    "check": "Magic values",
+    "result": "warn",
+    "detail": "getAllHappyCoordinates uses the string literal 'HAPPY' in JPQL. If MoodStatus enum values change, the query can drift. Prefer a bind parameter or a form that references the enum consistently (e.g. :status) supplied from application code.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java"
+    ]
+  },
+  {
+    "rule_id": "biz_007",
+    "check": "Immutability and side-effects",
+    "result": "warn",
+    "detail": "getHappyNearByLocations appears to be a pure read but triggers repeated repository reads (getAllLocations per coordinate), making behavior depend on hidden I/O and load. Predictable, side-effect-light methods would fetch data once and compute in memory.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java"
+    ]
+  },
+  {
+    "rule_id": "biz_008",
+    "check": "Method visibility",
+    "result": "fail",
+    "detail": "Helper methods getLocationsFromCoordinates and getBestLocationFromCoordinate are public though they are only used internally to MoodServiceImplementation. They should be private (or package-private) to avoid expanding the service API surface.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java"
+    ]
+  },
+  {
+    "rule_id": "biz_009",
+    "check": "Repository ID type mismatch",
+    "result": "fail",
+    "detail": "MoodRepository extends CrudRepository<Mood, String> but Mood declares @Id private int id. Spring Data expects the second generic to match the entity identifier type; using String here is inconsistent and risks incorrect generated API usage (findById, deleteById, etc.).",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java",
+      "src/main/java/com/example/moodsense/demo/model/Mood.java"
+    ]
+  },
+  {
+    "rule_id": "biz_010",
+    "check": "Input sanitization",
+    "result": "warn",
+    "detail": "uploadMood validates moodStatus, latitude, and longitude with @Validated @RequestParam, and Mood has JPA validation annotations, but the Mood binding object is not @Validated on the method, request.getRemoteUser() is not validated or normalized, and there is no explicit range/domain checks in the service beyond what the controller passes through.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java",
+      "src/main/java/com/example/moodsense/demo/model/Mood.java"
+    ]
+  }
+]
