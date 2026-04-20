@@ -1,13 +1,13 @@
 {
-  "app_name": "MoodSense",
-  "framework": "Spring Boot 2.7.0 (Java 11)",
-  "timestamp": "2026-04-20T19:13:14.434661",
+  "app_name": "moodsense",
+  "framework": "Spring Boot 2.7.0 / Java 11",
+  "assessed_at": "2026-04-20",
   "score": {
     "pass": 9,
     "warn": 35,
     "fail": 46,
     "total": 90,
-    "percentage": 10,
+    "pct": 10,
     "grade": "Critical"
   },
   "categories": {
@@ -15,7 +15,6 @@
       "pass": 1,
       "warn": 7,
       "fail": 10,
-      "total": 18,
       "findings": [
         {
           "check": "RESTful URI naming conventions",
@@ -192,7 +191,6 @@
       "pass": 2,
       "warn": 4,
       "fail": 4,
-      "total": 10,
       "findings": [
         {
           "check": "Package naming convention",
@@ -306,7 +304,6 @@
       "pass": 0,
       "warn": 6,
       "fail": 6,
-      "total": 12,
       "findings": [
         {
           "rule_id": "biz_001",
@@ -426,7 +423,6 @@
       "pass": 3,
       "warn": 8,
       "fail": 4,
-      "total": 15,
       "findings": [
         {
           "rule_id": "da_001",
@@ -581,7 +577,6 @@
       "pass": 2,
       "warn": 6,
       "fail": 7,
-      "total": 15,
       "findings": [
         {
           "check": "Authentication mechanism (deprecated API)",
@@ -730,7 +725,6 @@
       "pass": 1,
       "warn": 3,
       "fail": 6,
-      "total": 10,
       "findings": [
         {
           "check": "Validation dependency configuration",
@@ -833,7 +827,6 @@
       "pass": 0,
       "warn": 1,
       "fail": 9,
-      "total": 10,
       "findings": [
         {
           "check": "Global exception handler",
