@@ -1,9 +1,12 @@
 package com.example.moodsense.demo.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.any;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -28,41 +31,33 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @ContextConfiguration(classes = {MoodServiceImplementation.class})
 @ExtendWith(SpringExtension.class)
 class MoodServiceImplementationTest {
+
     @MockBean
     private MoodRepository moodRepository;
 
     @Autowired
     private MoodServiceImplementation moodServiceImplementation;
 
-
-    /**
-     * Method under test: {@link MoodServiceImplementation#getMoodDistribution(String)}
-     */
     @Test
     void testGetMoodDistribution() {
         ArrayList<MoodDistribution> moodDistributionList = new ArrayList<>();
-        when(this.moodRepository.getMoodDistribution((String) any())).thenReturn(moodDistributionList);
-        List<MoodDistribution> actualMoodDistribution = this.moodServiceImplementation.getMoodDistribution("Remote User");
-        assertSame(moodDistributionList, actualMoodDistribution);
-        assertTrue(actualMoodDistribution.isEmpty());
-        verify(this.moodRepository).getMoodDistribution((String) any());
+        when(moodRepository.getMoodDistribution(any())).thenReturn(moodDistributionList);
+        List<MoodDistribution> actual = moodServiceImplementation.getMoodDistribution("Remote User");
+        assertSame(moodDistributionList, actual);
+        assertTrue(actual.isEmpty());
+        verify(moodRepository).getMoodDistribution(any());
     }
 
-    /**
-     * Method under test: {@link MoodServiceImplementation#getHappyNearByLocations(String)}
-     */
     @Test
-    void testGetHappyNearByLocations() {
-        when(this.moodRepository.getAllHappyCoordinates((String) any())).thenReturn(new ArrayList<>());
-        assertTrue(this.moodServiceImplementation.getHappyNearByLocations("Remote User").isEmpty());
-        verify(this.moodRepository).getAllHappyCoordinates((String) any());
+    void testGetHappyNearByLocations_empty() {
+        when(moodRepository.getAllHappyCoordinates(any(), eq(MoodStatus.HAPPY))).thenReturn(new ArrayList<>());
+        when(moodRepository.getAllLocations()).thenReturn(new ArrayList<>());
+        assertTrue(moodServiceImplementation.getHappyNearByLocations("Remote User").isEmpty());
+        verify(moodRepository).getAllHappyCoordinates(any(), eq(MoodStatus.HAPPY));
     }
 
-    /**
-     * Method under test: {@link MoodServiceImplementation#getBestLocationFromCoordinate(Coordinate)}
-     */
     @Test
-    void testGetBestLocationFromCoordinate() {
+    void testGetHappyNearByLocations_findsNearestLocation() {
         Location home = new Location();
         home.setLatitude(1);
         home.setLongitude(1);
@@ -73,26 +68,41 @@ class MoodServiceImplementationTest {
         office.setLongitude(4);
         office.setName("office");
 
-        Location mall = new Location();
-        mall.setLatitude(10);
-        mall.setLongitude(10);
-        mall.setName("mall");
-
         ArrayList<Location> locationList = new ArrayList<>();
         locationList.add(home);
         locationList.add(office);
-        locationList.add(mall);
 
-        when(this.moodRepository.getAllLocations()).thenReturn(locationList);
         Coordinate coordinate = mock(Coordinate.class);
         when(coordinate.getLatitude()).thenReturn(1);
         when(coordinate.getLongitude()).thenReturn(1);
-        assertSame(home, this.moodServiceImplementation.getBestLocationFromCoordinate(coordinate));
+
+        ArrayList<Coordinate> coordinates = new ArrayList<>();
+        coordinates.add(coordinate);
+
+        when(moodRepository.getAllHappyCoordinates(any(), eq(MoodStatus.HAPPY))).thenReturn(coordinates);
+        when(moodRepository.getAllLocations()).thenReturn(locationList);
+
+        List<Location> result = moodServiceImplementation.getHappyNearByLocations("Remote User");
+        assertEquals(1, result.size());
+        assertEquals("home", result.get(0).getName());
     }
 
-    /**
-     * Method under test: {@link MoodServiceImplementation#save(Mood)}
-     */
+    @Test
+    void testGetHappyNearByLocations_noLocations_returnsEmptyList() {
+        Coordinate coordinate = mock(Coordinate.class);
+        when(coordinate.getLatitude()).thenReturn(1);
+        when(coordinate.getLongitude()).thenReturn(1);
+
+        ArrayList<Coordinate> coordinates = new ArrayList<>();
+        coordinates.add(coordinate);
+
+        when(moodRepository.getAllHappyCoordinates(any(), eq(MoodStatus.HAPPY))).thenReturn(coordinates);
+        when(moodRepository.getAllLocations()).thenReturn(new ArrayList<>());
+
+        List<Location> result = moodServiceImplementation.getHappyNearByLocations("Remote User");
+        assertTrue(result.isEmpty());
+    }
+
     @Test
     void testSave() {
         Mood mood = new Mood();
@@ -101,7 +111,7 @@ class MoodServiceImplementationTest {
         mood.setLongitude(1);
         mood.setMoodStatus(MoodStatus.HAPPY);
         mood.setPerson("Person");
-        when(this.moodRepository.save((Mood) any())).thenReturn(mood);
+        when(moodRepository.save(any(Mood.class))).thenReturn(mood);
 
         Mood mood1 = new Mood();
         mood1.setId(1);
@@ -109,13 +119,12 @@ class MoodServiceImplementationTest {
         mood1.setLongitude(1);
         mood1.setMoodStatus(MoodStatus.HAPPY);
         mood1.setPerson("Person");
-        this.moodServiceImplementation.save(mood1);
-        verify(this.moodRepository).save((Mood) any());
+        moodServiceImplementation.save(mood1);
+        verify(moodRepository).save(any(Mood.class));
         assertEquals(1, mood1.getId());
         assertEquals("Person", mood1.getPerson());
         assertEquals(MoodStatus.HAPPY, mood1.getMoodStatus());
         assertEquals(1, mood1.getLongitude());
         assertEquals(1, mood1.getLatitude());
     }
-
 }
