@@ -2,7 +2,7 @@
   {
     "check": "Global exception handler",
     "result": "fail",
-    "detail": "The project contains no @ControllerAdvice or @RestControllerAdvice class and no @ExceptionHandler methods. A repository-wide search shows no centralized exception handling, so failures from controllers and services rely entirely on Spring Boot defaults.",
+    "detail": "No @ControllerAdvice or @RestControllerAdvice class exists anywhere in the codebase. No @ExceptionHandler methods are defined in any controller. All exceptions propagate to Spring Boot's default BasicErrorController, which may expose stack traces or internal details depending on configuration. The application.properties does not configure server.error.* properties to restrict error output.",
     "rule_id": "err_001",
     "files": [
       "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java",
@@ -12,7 +12,7 @@
   {
     "check": "Consistent error response format",
     "result": "fail",
-    "detail": "There is no shared error response DTO (for example fields such as message, timestamp, path, and status). API errors would not be returned in a predictable, client-friendly JSON shape beyond whatever the default error page or BasicErrorController produces.",
+    "detail": "There is no shared error response DTO (e.g., with fields like message, timestamp, path, status, errorCode). API errors are returned in whatever format Spring Boot's default error mechanism produces, which varies depending on Accept headers and configuration. Clients cannot rely on a predictable JSON error shape.",
     "rule_id": "err_002",
     "files": [
       "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
@@ -21,25 +21,25 @@
   {
     "check": "Null return handling",
     "result": "fail",
-    "detail": "getBestLocationFromCoordinate initializes result to null and returns it when no locations exist or none are closer than the initial distance. getLocationsFromCoordinates always adds happyLocation to the list without a null check, so the returned List<Location> can contain null elements and risks NullPointerException for consumers of getHappyNearByLocations.",
+    "detail": "MoodServiceImplementation.getBestLocationFromCoordinate() initializes result to null and returns null when the locations list from the repository is empty. The caller getLocationsFromCoordinates() adds the return value directly to the result list without null-checking, so the List<Location> returned to the controller can contain null elements. This will cause NullPointerException when the response is serialized or when clients process the list. Additionally, getHappyNearByLocations delegates without null-guarding the intermediate results.",
     "rule_id": "err_003",
     "files": [
       "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java"
     ]
   },
   {
-    "check": "void endpoint response",
+    "check": "Void endpoint response",
     "result": "fail",
-    "detail": "uploadMood is declared void and does not set an explicit HTTP status on the HttpServletResponse. For a resource-creating POST, a 201 Created (typically with ResponseEntity or response.setStatus) is the expected pattern; the current signature gives no clear success contract to clients.",
+    "detail": "The uploadMood POST endpoint is declared void and does not set an explicit HTTP status on the HttpServletResponse parameter. For a resource-creating POST endpoint, a 201 Created with a location header or at minimum a ResponseEntity with an appropriate status code is expected. Clients receive a default 200 OK with an empty body, providing no confirmation contract for successful creation.",
     "rule_id": "err_004",
     "files": [
       "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
     ]
   },
   {
-    "check": "No custom exceptions",
+    "check": "Custom exception classes",
     "result": "fail",
-    "detail": "No domain-specific exceptions (for example for missing moods or locations) appear anywhere in the application sources. Business and persistence failures cannot be mapped to distinct HTTP semantics without such types or equivalent error codes.",
+    "detail": "No domain-specific exception classes exist in the codebase (e.g., MoodNotFoundException, InvalidCoordinateException, LocationNotFoundException). Without custom exceptions, business-layer failures cannot be mapped to distinct HTTP status codes or meaningful error messages. All failures surface as generic 500 Internal Server Error responses.",
     "rule_id": "err_005",
     "files": [
       "src/main/java/com/example/moodsense/demo/service/MoodService.java",
@@ -49,7 +49,7 @@
   {
     "check": "Database error handling",
     "result": "fail",
-    "detail": "MoodRepository extends CrudRepository and save flows through moodRepository.save in MoodServiceImplementation without try-catch, @Transactional rollback rules for callers, or handlers for DataIntegrityViolationException and related JPA or SQL exceptions. Constraint violations and other persistence errors are not translated into controlled API errors.",
+    "detail": "MoodRepository extends CrudRepository and all repository calls (save, getMoodDistribution, getAllHappyCoordinates, getAllLocations) flow through MoodServiceImplementation without any try-catch blocks or exception translation. No @Transactional annotations are present on service methods. DataIntegrityViolationException, JpaSystemException, and other persistence exceptions propagate directly to the controller and ultimately to the client as uncontrolled 500 errors with potentially sensitive database details.",
     "rule_id": "err_006",
     "files": [
       "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java",
@@ -59,39 +59,41 @@
   {
     "check": "Inconsistent ResponseEntity usage",
     "result": "fail",
-    "detail": "uploadMood returns void while getMoodDistribution and getHappyNearByLocations return ResponseEntity with HttpStatus.OK. The controller mixes styles, making status and body handling inconsistent across endpoints.",
+    "detail": "The controller uses mixed return type conventions: uploadMood returns void while getMoodDistribution and getHappyNearByLocations return ResponseEntity<List<...>> with HttpStatus.OK. This inconsistency makes the API contract unpredictable for clients and prevents uniform error/success handling at the controller level.",
     "rule_id": "err_007",
     "files": [
       "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
     ]
   },
   {
-    "check": "Logging",
+    "check": "Logging of errors and operations",
     "result": "fail",
-    "detail": "There is no SLF4J Logger, @Slf4j, or LoggerFactory usage in MoodSenseController or MoodServiceImplementation. Errors and important operations are not logged for diagnostics or security auditing.",
+    "detail": "There is no logging framework usage anywhere in the application code. No SLF4J Logger, @Slf4j annotation, or LoggerFactory.getLogger() calls exist in any controller, service, or configuration class. Errors, exceptions, and important business operations are completely silent, making debugging, incident response, and security auditing impossible.",
     "rule_id": "err_008",
     "files": [
       "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java",
-      "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java"
+      "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java",
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
     ]
   },
   {
-    "check": "Exception propagation",
-    "result": "warn",
-    "detail": "Service and repository methods do not declare checked exceptions, which is normal in Spring. However, there is no application-level strategy (custom exceptions plus handler, or Result types) to document or constrain failure modes; runtime exceptions propagate unchanged to the framework.",
+    "check": "Input validation error handling",
+    "result": "fail",
+    "detail": "The controller uses @Validated on @RequestParam parameters (moodStatus, latitude, longitude) and the Mood entity has @NotNull, @Min, @Max bean validation annotations, but there is no handler for MethodArgumentNotValidException, ConstraintViolationException, or MethodArgumentTypeMismatchException. When invalid input is provided (e.g., a non-existent MoodStatus enum value or missing parameters), the framework throws exceptions that are not caught or translated into user-friendly 400 Bad Request responses with descriptive messages.",
     "rule_id": "err_009",
     "files": [
-      "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java",
-      "src/main/java/com/example/moodsense/demo/service/MoodService.java"
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java",
+      "src/main/java/com/example/moodsense/demo/model/Mood.java"
     ]
   },
   {
-    "check": "HTTP 500 on unhandled exceptions",
+    "check": "HTTP 500 exposure on unhandled exceptions",
     "result": "warn",
-    "detail": "Without a @RestControllerAdvice, unhandled exceptions are handled by Spring Boot’s default mechanism. Depending on server.error.* properties and whether the client accepts JSON, clients may receive a generic 5xx body; in misconfigured or development modes, stack traces or internal details can be exposed. A dedicated global handler would normalize 5xx responses and avoid accidental leakage.",
+    "detail": "Without a @RestControllerAdvice or any global exception handler, all unhandled exceptions (NullPointerException from null locations, database errors, validation failures) result in Spring Boot's default error handling. The application.properties does not configure server.error.include-stacktrace, server.error.include-message, or server.error.include-binding-errors, so depending on the Spring Boot version defaults, stack traces and internal details could be exposed to clients in error responses. This is both a usability and security concern.",
     "rule_id": "err_010",
     "files": [
-      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java",
+      "src/main/resources/application.properties"
     ]
   }
 ]

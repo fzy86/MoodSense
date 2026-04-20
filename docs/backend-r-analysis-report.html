@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>R-Analysis Report — MoodSense</title>
+<style>
+  :root {
+    --bg: #0f172a; --surface: #1e293b; --surface2: #334155;
+    --text: #e2e8f0; --text-muted: #94a3b8; --border: #475569;
+    --pass: #22c55e; --warn: #f59e0b; --fail: #ef4444;
+    --accent: #3b82f6;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+  
+  header { text-align: center; margin-bottom: 3rem; padding: 3rem 2rem; background: linear-gradient(135deg, var(--surface), var(--surface2)); border-radius: 16px; border: 1px solid var(--border); }
+  header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+  header .subtitle { color: var(--text-muted); font-size: 1.1rem; }
+  
+  .recommendation-banner { text-align: center; padding: 2rem; margin-bottom: 2rem; border-radius: 12px; border: 2px solid #ef4444; background: #ef444415; }
+  .recommendation-banner h2 { font-size: 2rem; color: #ef4444; margin-bottom: 0.5rem; letter-spacing: 0.15em; }
+  .recommendation-banner p { color: var(--text-muted); max-width: 700px; margin: 0 auto; }
+  
+  .score-overview { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 3rem; }
+  .score-card { background: var(--surface); border-radius: 12px; padding: 1.5rem; text-align: center; border: 1px solid var(--border); }
+  .score-card .value { font-size: 2.5rem; font-weight: 700; }
+  .score-card .label { color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .score-card.overall .value { color: #ef4444; }
+  .score-card.pass-card .value { color: var(--pass); }
+  .score-card.warn-card .value { color: var(--warn); }
+  .score-card.fail-card .value { color: var(--fail); }
+  
+  h2.section-title { font-size: 1.5rem; margin: 2.5rem 0 1.5rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--border); }
+  
+  .category-card { background: var(--surface); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid var(--border); }
+  .category-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+  .category-header h3 { font-size: 1.25rem; }
+  .category-stats { display: flex; gap: 1rem; }
+  .stat { font-size: 0.85rem; font-weight: 600; }
+  .pass-stat { color: var(--pass); }
+  .warn-stat { color: var(--warn); }
+  .fail-stat { color: var(--fail); }
+  .category-score { font-size: 0.9rem; color: var(--text-muted); margin-top: 0.5rem; }
+  
+  .progress-bar-container { height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+  .progress-bar { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+  
+  .findings-list { margin-top: 1rem; }
+  .finding { padding: 1rem; margin-bottom: 0.75rem; border-radius: 8px; border-left: 4px solid transparent; }
+  .finding.pass { background: #22c55e10; border-left-color: var(--pass); }
+  .finding.warn { background: #f59e0b10; border-left-color: var(--warn); }
+  .finding.fail { background: #ef444410; border-left-color: var(--fail); }
+  .finding-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap; }
+  .finding-detail { color: var(--text-muted); font-size: 0.9rem; }
+  .files { margin-top: 0.5rem; }
+  .files code { font-size: 0.8rem; background: var(--surface2); padding: 2px 6px; border-radius: 4px; color: var(--accent); }
+  .rule-id { color: var(--text-muted); font-size: 0.8rem; }
+  
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+  .badge.pass { background: var(--pass); color: #000; }
+  .badge.warn { background: var(--warn); color: #000; }
+  .badge.fail { background: var(--fail); color: #fff; }
+  
+  table { width: 100%; border-collapse: collapse; margin-bottom: 2rem; }
+  th { background: var(--surface2); text-align: left; padding: 0.75rem 1rem; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+  td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); font-size: 0.9rem; vertical-align: top; }
+  tr:hover td { background: var(--surface); }
+  
+  .footer { text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.85rem; border-top: 1px solid var(--border); margin-top: 3rem; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>R-Analysis Report</h1>
+    <p class="subtitle">MoodSense &mdash; Spring Boot 2.7.0 (Java 11)</p>
+    <p class="subtitle" style="margin-top:0.5rem;font-size:0.9rem;">Generated April 20, 2026 at 19:13 UTC</p>
+  </header>
+
+  <div class="recommendation-banner">
+    <h2>REBUILD</h2>
+    <p>The application has critical structural, security, and quality gaps across most categories. A ground-up rebuild with modern practices is recommended over incremental fixes.</p>
+  </div>
+
+  <div class="score-overview">
+    <div class="score-card overall">
+      <div class="value">10%</div>
+      <div class="label">Overall Score &mdash; Critical</div>
+    </div>
+    <div class="score-card pass-card">
+      <div class="value">9</div>
+      <div class="label">Passed Checks</div>
+    </div>
+    <div class="score-card warn-card">
+      <div class="value">35</div>
+      <div class="label">Warnings</div>
+    </div>
+    <div class="score-card fail-card">
+      <div class="value">46</div>
+      <div class="label">Failures</div>
+    </div>
+  </div>
+
+  <h2 class="section-title">Critical Findings (46)</h2>
+  <table>
+    <thead><tr><th>#</th><th>Status</th><th>Category</th><th>Finding</th><th>Files</th></tr></thead>
+    <tbody>
+    <tr>
+        <td>1</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>API Design</td>
+        <td><strong>RESTful URI naming conventions</strong><br><small>All three endpoint URIs use verbs and camelCase: /uploadMood, /getMoodDistribution, /getHappyNearByLocations. REST best practice requires noun-based, lowercase, hyphen-separated resource paths (e.g., ...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></small></td>
+    </tr>
+    <tr>
+        <td>2</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>API Design</td>
+        <td><strong>HTTP method semantics and status codes</strong><br><small>The uploadMood POST endpoint returns void, which results in a default 200 OK. For a resource-creating operation, the endpoint should return 201 Created (ideally with a Location header pointing to the ...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></small></td>
+    </tr>
+    <tr>
+        <td>3</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>API Design</td>
+        <td><strong>API versioning strategy</strong><br><small>There is no API versioning mechanism in place. The controller class has no class-level @RequestMapping with a versioned base path (e.g., /api/v1), and no header-based or media-type-based versioning is...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></small></td>
+    </tr>
+    <tr>
+        <td>4</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>API Design</td>
+        <td><strong>Request body handling for POST</strong><br><small>The uploadMood POST endpoint accepts data via individual @RequestParam parameters and an unbound Mood form object instead of using @RequestBody with a JSON request DTO. REST APIs should accept structu...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></small></td>
+    </tr>
+    <tr>
+        <td>5</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>API Design</td>
+        <td><strong>Input validation on request body</strong><br><small>The Mood model has @NotNull, @Min, and @Max validation annotations, but the controller never triggers bean validation on the Mood object because @Valid or @Validated is not placed on the Mood paramete...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code>, <code>src/main/java/com/example/moodsense/demo/model/Mood.java</code></small></td>
+    </tr>
+    <tr>
+        <td>6</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>API Design</td>
+        <td><strong>Consistent ResponseEntity usage</strong><br><small>uploadMood returns void while getMoodDistribution and getHappyNearByLocations return ResponseEntity<List<...>>. Mixing return types across endpoints in the same controller creates an inconsistent API ...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></small></td>
+    </tr>
+    <tr>
+        <td>7</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>API Design</td>
+        <td><strong>Pagination support for collection endpoints</strong><br><small>getMoodDistribution and getHappyNearByLocations both return raw List<> without any pagination support (no Pageable parameter, no Page/Slice wrapper, no limit/offset query params). For production APIs,...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code>, <code>src/main/java/com/example/moodsense/demo/service/MoodService.java</code></small></td>
+    </tr>
+    <tr>
+        <td>8</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>API Design</td>
+        <td><strong>DTO separation from domain entities</strong><br><small>The controller directly exposes JPA entities (Mood, Location) and projection interfaces (MoodDistribution) as API request/response types. There are no dedicated DTOs or API resource representations. E...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code>, <code>src/main/java/com/example/moodsense/demo/model/Mood.java</code>, <code>src/main/java/com/example/moodsense/demo/model/Location.java</code>, <code>src/main/java/com/example/moodsense/demo/model/MoodDistribution.java</code></small></td>
+    </tr>
+    <tr>
+        <td>9</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>API Design</td>
+        <td><strong>API documentation (OpenAPI/Swagger)</strong><br><small>There are no OpenAPI/Swagger annotations (@Operation, @ApiResponse, @Schema, etc.) on the controller or model classes, and no springdoc-openapi or springfox dependency in pom.xml. The API is entirely ...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code>, <code>pom.xml</code></small></td>
+    </tr>
+    <tr>
+        <td>10</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>API Design</td>
+        <td><strong>Response body for write operations</strong><br><small>The uploadMood POST endpoint returns void, providing no response body to the client. Best practice for resource-creating endpoints is to return the created resource (or at minimum its ID and a Locatio...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></small></td>
+    </tr>
+    <tr>
+        <td>11</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Domain Structure</td>
+        <td><strong>Package naming convention</strong><br><small>The persistence layer package is named `repositary` (misspelled) instead of the standard `repository`. This typo propagates into import statements in MoodServiceImplementation and MoodServiceImplement...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</code>, <code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code>, <code>src/test/java/com/example/moodsense/demo/service/MoodServiceImplementationTest.java</code></small></td>
+    </tr>
+    <tr>
+        <td>12</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Domain Structure</td>
+        <td><strong>Entity design</strong><br><small>Multiple entity design issues: (1) Neither Mood nor Location has audit fields (createdAt/updatedAt). (2) Mood declares its @Id as primitive `int` with @GeneratedValue, but MoodRepository extends CrudR...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/model/Mood.java</code>, <code>src/main/java/com/example/moodsense/demo/model/Location.java</code>, <code>src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</code></small></td>
+    </tr>
+    <tr>
+        <td>13</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Domain Structure</td>
+        <td><strong>DTO separation</strong><br><small>The REST controller's uploadMood endpoint accepts the Mood JPA entity directly as a method parameter and mutates it in-place (setting person, latitude, longitude, moodStatus) before persisting. No req...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code>, <code>src/main/java/com/example/moodsense/demo/model/Mood.java</code></small></td>
+    </tr>
+    <tr>
+        <td>14</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Domain Structure</td>
+        <td><strong>Application entry point naming</strong><br><small>The Spring Boot main class is named `DemoApplication` — a generic placeholder that does not reflect the product identity. A domain-aligned name such as `MoodSenseApplication` would improve clarity in ...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/DemoApplication.java</code></small></td>
+    </tr>
+    <tr>
+        <td>15</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Business Logic</td>
+        <td><strong>Logic correctness – distance calculation bug</strong><br><small>In MoodServiceImplementation.getBestLocationFromCoordinate (line 45), the Euclidean distance formula is incorrect. The second squared term computes `location.getLatitude() - coordinate.getLongitude()`...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></small></td>
+    </tr>
+    <tr>
+        <td>16</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Business Logic</td>
+        <td><strong>Transaction management</strong><br><small>No @Transactional annotation exists anywhere in the service layer. MoodServiceImplementation.save() delegates directly to CrudRepository.save() without declaring an explicit transaction boundary. Whil...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code>, <code>src/main/java/com/example/moodsense/demo/service/MoodService.java</code></small></td>
+    </tr>
+    <tr>
+        <td>17</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Business Logic</td>
+        <td><strong>Null safety in location resolution</strong><br><small>getBestLocationFromCoordinate initialises result to null and only assigns it if the distance improves. When the Location table is empty, it returns null. getLocationsFromCoordinates then adds that nul...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></small></td>
+    </tr>
+    <tr>
+        <td>18</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Business Logic</td>
+        <td><strong>Performance – N+1 query on getAllLocations</strong><br><small>getLocationsFromCoordinates iterates over every happy coordinate and calls getBestLocationFromCoordinate for each, which in turn calls moodRepository.getAllLocations() on every invocation. This produc...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></small></td>
+    </tr>
+    <tr>
+        <td>19</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Business Logic</td>
+        <td><strong>Method visibility – public helpers on service implementation</strong><br><small>getLocationsFromCoordinates and getBestLocationFromCoordinate are public methods on MoodServiceImplementation but are not declared on the MoodService interface and are only used internally. They shoul...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></small></td>
+    </tr>
+    <tr>
+        <td>20</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Business Logic</td>
+        <td><strong>Repository generic ID type mismatch</strong><br><small>MoodRepository extends CrudRepository<Mood, String>, declaring String as the entity ID type. However, Mood declares its @Id field as `private int id`. The ID type parameter should be Integer (the boxe...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</code>, <code>src/main/java/com/example/moodsense/demo/model/Mood.java</code></small></td>
+    </tr>
+    <tr>
+        <td>21</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Data Access</td>
+        <td><strong>Entity ID type matches repository generic parameter</strong><br><small>Mood entity declares its primary key as '@Id @GeneratedValue private int id' (type int/Integer), but MoodRepository is parameterized as CrudRepository<Mood, String>. The second generic type must match...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</code>, <code>src/main/java/com/example/moodsense/demo/model/Mood.java</code></small></td>
+    </tr>
+    <tr>
+        <td>22</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Data Access</td>
+        <td><strong>N+1 / repeated query problem</strong><br><small>MoodServiceImplementation.getHappyNearByLocations iterates over a list of coordinates and calls getBestLocationFromCoordinate for each one. getBestLocationFromCoordinate calls moodRepository.getAllLoc...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code>, <code>src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</code></small></td>
+    </tr>
+    <tr>
+        <td>23</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Data Access</td>
+        <td><strong>Repository package naming convention</strong><br><small>The repository package is named 'repositary' (com.example.moodsense.demo.repositary), which is a misspelling of 'repository'. This affects discoverability, IDE navigation, and violates standard Java n...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</code>, <code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code>, <code>src/test/java/com/example/moodsense/demo/service/MoodServiceImplementationTest.java</code></small></td>
+    </tr>
+    <tr>
+        <td>24</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Data Access</td>
+        <td><strong>Distance calculation bug in data access logic</strong><br><small>In MoodServiceImplementation.getBestLocationFromCoordinate, the Euclidean distance formula has a bug: it uses location.getLatitude() - coordinate.getLongitude() for the second dimension instead of loc...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></small></td>
+    </tr>
+    <tr>
+        <td>25</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Authentication</td>
+        <td><strong>Credential storage strategy</strong><br><small>User credentials are hardcoded in-memory via InMemoryUserDetailsManager with literal usernames ('user1', 'user2') and passwords ('pwd1', 'pwd2') defined directly in the Java source. Production applica...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java</code></small></td>
+    </tr>
+    <tr>
+        <td>26</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Authentication</td>
+        <td><strong>CSRF protection</strong><br><small>CSRF protection is globally disabled via .csrf().disable() on the main HttpSecurity chain. The application uses HTTP Basic authentication which is session-based by default (Spring Security creates an ...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java</code></small></td>
+    </tr>
+    <tr>
+        <td>27</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Authentication</td>
+        <td><strong>H2 console exposure</strong><br><small>The H2 database console is enabled (spring.h2.console.enabled=true) and its path /h2-console/** is explicitly permitAll() with CSRF disabled and frame options relaxed. This exposes a full SQL console ...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java</code>, <code>src/main/resources/application.properties</code></small></td>
+    </tr>
+    <tr>
+        <td>28</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Authentication</td>
+        <td><strong>Authentication and authorization testing</strong><br><small>The spring-security-test dependency is declared in pom.xml, but no security-focused tests exist. There are no tests verifying that unauthenticated requests are rejected (HTTP 401), that users without ...</small></td>
+        <td><small><code>pom.xml</code>, <code>src/test/java/com/example/moodsense/demo/DemoApplicationTests.java</code>, <code>src/test/java/com/example/moodsense/demo/service/MoodServiceImplementationTest.java</code></small></td>
+    </tr>
+    <tr>
+        <td>29</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Authentication</td>
+        <td><strong>Hardcoded secrets in source code</strong><br><small>Plaintext passwords ('pwd1', 'pwd2') and usernames ('user1', 'user2') are embedded directly in SpringSecurityConfig.java. Even though they are BCrypt-encoded before storage, the raw password strings a...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java</code></small></td>
+    </tr>
+    <tr>
+        <td>30</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Authentication</td>
+        <td><strong>Brute-force / rate-limiting protection</strong><br><small>There is no rate limiting or account lockout mechanism for failed authentication attempts. HTTP Basic auth endpoints are directly exposed, allowing unlimited brute-force password guessing. The applica...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java</code></small></td>
+    </tr>
+    <tr>
+        <td>31</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Authentication</td>
+        <td><strong>HTTPS / transport layer security enforcement</strong><br><small>The security configuration does not enforce HTTPS (no http.requiresChannel().anyRequest().requiresSecure() or server.ssl.* properties). HTTP Basic authentication sends Base64-encoded credentials on ev...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java</code>, <code>src/main/resources/application.properties</code></small></td>
+    </tr>
+    <tr>
+        <td>32</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Validation</td>
+        <td><strong>@NotNull on primitive types</strong><br><small>In `Mood.java`, `@NotNull` is applied to primitive `int latitude` and `int longitude`. Primitive types can never be `null` in Java, so `@NotNull` will never trigger a validation failure. These fields ...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/model/Mood.java</code></small></td>
+    </tr>
+    <tr>
+        <td>33</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Validation</td>
+        <td><strong>Controller @Valid/@Validated on request body/model</strong><br><small>The `uploadMood` method in `MoodSenseController` accepts a `Mood` entity as a method parameter but does not annotate it with `@Valid` or `@Validated`. Bean Validation constraints declared on `Mood` (`...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code>, <code>src/main/java/com/example/moodsense/demo/model/Mood.java</code></small></td>
+    </tr>
+    <tr>
+        <td>34</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Validation</td>
+        <td><strong>@RequestBody annotation missing on POST endpoint</strong><br><small>The `uploadMood` POST endpoint accepts a `Mood` parameter without `@RequestBody`. In a `@RestController`, this causes Spring to treat it as a form-binding parameter rather than deserializing JSON from...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></small></td>
+    </tr>
+    <tr>
+        <td>35</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Validation</td>
+        <td><strong>Validation error handling</strong><br><small>There is no `@ControllerAdvice` or `@ExceptionHandler` to handle `MethodArgumentNotValidException`, `ConstraintViolationException`, or `BindException`. If validation were properly triggered, errors wo...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></small></td>
+    </tr>
+    <tr>
+        <td>36</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Validation</td>
+        <td><strong>@Validated misuse on @RequestParam</strong><br><small>`@Validated` is placed directly on `@RequestParam` parameters (`MoodStatus moodStatus`, `Integer latitude`, `Integer longitude`) in the `uploadMood` method. `@Validated` on individual parameters does ...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></small></td>
+    </tr>
+    <tr>
+        <td>37</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Validation</td>
+        <td><strong>Missing validation on key entity fields</strong><br><small>Several important fields lack validation constraints: `Mood.person` has no `@NotBlank` or `@NotNull` (it is set from `request.getRemoteUser()` which could be null in certain configurations); `Mood.moo...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/model/Mood.java</code>, <code>src/main/java/com/example/moodsense/demo/model/Location.java</code></small></td>
+    </tr>
+    <tr>
+        <td>38</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Error Handling</td>
+        <td><strong>Global exception handler</strong><br><small>No @ControllerAdvice or @RestControllerAdvice class exists anywhere in the codebase. No @ExceptionHandler methods are defined in any controller. All exceptions propagate to Spring Boot's default Basic...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code>, <code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></small></td>
+    </tr>
+    <tr>
+        <td>39</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Error Handling</td>
+        <td><strong>Consistent error response format</strong><br><small>There is no shared error response DTO (e.g., with fields like message, timestamp, path, status, errorCode). API errors are returned in whatever format Spring Boot's default error mechanism produces, w...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></small></td>
+    </tr>
+    <tr>
+        <td>40</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Error Handling</td>
+        <td><strong>Null return handling</strong><br><small>MoodServiceImplementation.getBestLocationFromCoordinate() initializes result to null and returns null when the locations list from the repository is empty. The caller getLocationsFromCoordinates() add...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></small></td>
+    </tr>
+    <tr>
+        <td>41</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Error Handling</td>
+        <td><strong>Void endpoint response</strong><br><small>The uploadMood POST endpoint is declared void and does not set an explicit HTTP status on the HttpServletResponse parameter. For a resource-creating POST endpoint, a 201 Created with a location header...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></small></td>
+    </tr>
+    <tr>
+        <td>42</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Error Handling</td>
+        <td><strong>Custom exception classes</strong><br><small>No domain-specific exception classes exist in the codebase (e.g., MoodNotFoundException, InvalidCoordinateException, LocationNotFoundException). Without custom exceptions, business-layer failures cann...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/service/MoodService.java</code>, <code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></small></td>
+    </tr>
+    <tr>
+        <td>43</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Error Handling</td>
+        <td><strong>Database error handling</strong><br><small>MoodRepository extends CrudRepository and all repository calls (save, getMoodDistribution, getAllHappyCoordinates, getAllLocations) flow through MoodServiceImplementation without any try-catch blocks ...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code>, <code>src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</code></small></td>
+    </tr>
+    <tr>
+        <td>44</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Error Handling</td>
+        <td><strong>Inconsistent ResponseEntity usage</strong><br><small>The controller uses mixed return type conventions: uploadMood returns void while getMoodDistribution and getHappyNearByLocations return ResponseEntity<List<...>> with HttpStatus.OK. This inconsistency...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></small></td>
+    </tr>
+    <tr>
+        <td>45</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Error Handling</td>
+        <td><strong>Logging of errors and operations</strong><br><small>There is no logging framework usage anywhere in the application code. No SLF4J Logger, @Slf4j annotation, or LoggerFactory.getLogger() calls exist in any controller, service, or configuration class. E...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code>, <code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code>, <code>src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java</code></small></td>
+    </tr>
+    <tr>
+        <td>46</td>
+        <td><span class="badge fail">FAIL</span></td>
+        <td>Error Handling</td>
+        <td><strong>Input validation error handling</strong><br><small>The controller uses @Validated on @RequestParam parameters (moodStatus, latitude, longitude) and the Mood entity has @NotNull, @Min, @Max bean validation annotations, but there is no handler for Metho...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code>, <code>src/main/java/com/example/moodsense/demo/model/Mood.java</code></small></td>
+    </tr></tbody>
+  </table>
+
+  <h2 class="section-title">Suggestions (35)</h2>
+  <table>
+    <thead><tr><th>#</th><th>Status</th><th>Category</th><th>Finding</th><th>Files</th></tr></thead>
+    <tbody>
+    <tr>
+        <td>1</td>
+        <td><span class="badge warn">WARN</span></td>
+        <td>API Design</td>
+        <td><strong>Use of @GetMapping/@PostMapping shortcut annotations</strong><br><small>All endpoints use the verbose @RequestMapping(value = "...", method = RequestMethod.XXX) form instead of the more concise and idiomatic @GetMapping and @PostMapping annotations available since Spring ...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></small></td>
+    </tr>
+    <tr>
+        <td>2</td>
+        <td><span class="badge warn">WARN</span></td>
+        <td>API Design</td>
+        <td><strong>Content type declarations (produces/consumes)</strong><br><small>None of the @RequestMapping annotations declare explicit 'produces' or 'consumes' media types (e.g., MediaType.APPLICATION_JSON_VALUE). While Spring Boot defaults to JSON via Jackson on the classpath,...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></small></td>
+    </tr>
+    <tr>
+        <td>3</td>
+        <td><span class="badge warn">WARN</span></td>
+        <td>API Design</td>
+        <td><strong>Controller base path</strong><br><small>The controller class has no class-level @RequestMapping to define a shared base path (e.g., /api/moods). Each endpoint defines its full path individually. A common base path groups related endpoints, ...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></small></td>
+    </tr>
+    <tr>
+        <td>4</td>
+        <td><span class="badge warn">WARN</span></td>
+        <td>API Design</td>
+        <td><strong>Use of HttpServletRequest/HttpServletResponse in controller</strong><br><small>uploadMood accepts both HttpServletRequest and HttpServletResponse as parameters, and the GET endpoints accept HttpServletRequest. Directly depending on Servlet API objects couples the controller to t...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></small></td>
+    </tr>
+    <tr>
+        <td>5</td>
+        <td><span class="badge warn">WARN</span></td>
+        <td>API Design</td>
+        <td><strong>CORS configuration</strong><br><small>There is no @CrossOrigin annotation on the controller and no WebMvcConfigurer bean defining CORS mappings. If the API is consumed by browser-based clients from different origins, requests will be bloc...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java</code>, <code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></small></td>
+    </tr>
+    <tr>
+        <td>6</td>
+        <td><span class="badge warn">WARN</span></td>
+        <td>API Design</td>
+        <td><strong>REST resource CRUD completeness</strong><br><small>The API only supports creating a mood (POST) and reading aggregated data (GET mood distribution, GET happy locations). There are no endpoints for retrieving a single mood by ID, updating a mood (PUT/P...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></small></td>
+    </tr>
+    <tr>
+        <td>7</td>
+        <td><span class="badge warn">WARN</span></td>
+        <td>API Design</td>
+        <td><strong>Path variable usage for resource identification</strong><br><small>No endpoints use @PathVariable for resource identification (e.g., /moods/{id}). The user identity is extracted from HttpServletRequest.getRemoteUser() for all operations. While authentication-based sc...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></small></td>
+    </tr>
+    <tr>
+        <td>8</td>
+        <td><span class="badge warn">WARN</span></td>
+        <td>Domain Structure</td>
+        <td><strong>Domain model richness</strong><br><small>Domain entities (Mood, Location) and the MoodStatus enum are pure data carriers generated via Lombok @Data with no domain behavior. Business rules such as distance calculation and mood grouping live e...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/model/Mood.java</code>, <code>src/main/java/com/example/moodsense/demo/model/Location.java</code>, <code>src/main/java/com/example/moodsense/demo/model/MoodStatus.java</code>, <code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></small></td>
+    </tr>
+    <tr>
+        <td>9</td>
+        <td><span class="badge warn">WARN</span></td>
+        <td>Domain Structure</td>
+        <td><strong>Value objects and projections</strong><br><small>Coordinate and MoodDistribution are plain interfaces used as Spring Data JPA query projections. While they work for mapping query results, they are not explicit immutable value objects (e.g., Java rec...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/model/Coordinate.java</code>, <code>src/main/java/com/example/moodsense/demo/model/MoodDistribution.java</code>, <code>src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</code></small></td>
+    </tr>
+    <tr>
+        <td>10</td>
+        <td><span class="badge warn">WARN</span></td>
+        <td>Domain Structure</td>
+        <td><strong>Class and method naming conventions</strong><br><small>Most names follow Java conventions, but several are suboptimal: (1) `getHappyNearByLocations` uses awkward camelCase for 'NearBy' — `getHappyNearbyLocations` would be more natural. (2) `MoodServiceImp...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/service/MoodService.java</code>, <code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code>, <code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></small></td>
+    </tr>
+    <tr>
+        <td>11</td>
+        <td><span class="badge warn">WARN</span></td>
+        <td>Domain Structure</td>
+        <td><strong>Single Responsibility Principle</strong><br><small>MoodServiceImplementation mixes application-layer orchestration (delegating save and query calls to the repository) with spatial matching logic (Euclidean distance computation in getBestLocationFromCo...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></small></td>
+    </tr>
+    <tr>
+        <td>12</td>
+        <td><span class="badge warn">WARN</span></td>
+        <td>Business Logic</td>
+        <td><strong>Service layer completeness – controller performing entity assembly</strong><br><small>The uploadMood controller method assembles the Mood entity (setting person, latitude, longitude, moodStatus) before calling moodService.save(). Entity construction and invariant enforcement belong in ...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code>, <code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></small></td>
+    </tr>
+    <tr>
+        <td>13</td>
+        <td><span class="badge warn">WARN</span></td>
+        <td>Business Logic</td>
+        <td><strong>Magic values – hardcoded enum string in JPQL</strong><br><small>The getAllHappyCoordinates query hardcodes the string literal 'HAPPY' in the WHERE clause. If the MoodStatus enum value is renamed or if case-sensitivity behavior changes, the query silently drifts. A...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</code></small></td>
+    </tr>
+    <tr>
+        <td>14</td>
+        <td><span class="badge warn">WARN</span></td>
+        <td>Business Logic</td>
+        <td><strong>Input validation gaps</strong><br><small>uploadMood uses @Validated on individual @RequestParam arguments but the Mood object itself (which carries @Min/@Max/@NotNull annotations) is not annotated with @Valid or @Validated on the method para...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code>, <code>src/main/java/com/example/moodsense/demo/model/Mood.java</code></small></td>
+    </tr>
+    <tr>
+        <td>15</td>
+        <td><span class="badge warn">WARN</span></td>
+        <td>Business Logic</td>
+        <td><strong>Duplicate results in happy-location list</strong><br><small>getLocationsFromCoordinates maps each happy coordinate to its nearest location independently. If multiple distinct coordinates resolve to the same Location, the returned list will contain duplicate Lo...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></small></td>
+    </tr>
+    <tr>
+        <td>16</td>
+        <td><span class="badge warn">WARN</span></td>
+        <td>Business Logic</td>
+        <td><strong>Wasteful initial distance value</strong><br><small>getBestLocationFromCoordinate initializes the distance sentinel with `Double.valueOf(Integer.MAX_VALUE)`. While functionally harmless (Integer.MAX_VALUE is large enough for the constrained [-10,10] co...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></small></td>
+    </tr>
+    <tr>
+        <td>17</td>
+        <td><span class="badge warn">WARN</span></td>
+        <td>Business Logic</td>
+        <td><strong>Read-path side effects and consistency</strong><br><small>getHappyNearByLocations is a read-only operation but triggers multiple independent database queries (one for coordinates, then N for locations). Because there is no @Transactional(readOnly=true), thes...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></small></td>
+    </tr>
+    <tr>
+        <td>18</td>
+        <td><span class="badge warn">WARN</span></td>
+        <td>Data Access</td>
+        <td><strong>Repository extends appropriate Spring Data interface</strong><br><small>MoodRepository extends CrudRepository<Mood, String>. While CrudRepository is a valid Spring Data base interface, JpaRepository is the more idiomatic choice for Spring Data JPA projects. JpaRepository ...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</code></small></td>
+    </tr>
+    <tr>
+        <td>19</td>
+        <td><span class="badge warn">WARN</span></td>
+        <td>Data Access</td>
+        <td><strong>Production-grade database configuration</strong><br><small>application.properties configures an in-memory H2 database (jdbc:h2:mem:testdb) with the H2 console enabled. H2 in-memory mode loses all data on application restart and is unsuitable for production. T...</small></td>
+        <td><small><code>src/main/resources/application.properties</code>, <code>pom.xml</code></small></td>
+    </tr>
+    <tr>
+        <td>20</td>
+        <td><span class="badge warn">WARN</span></td>
+        <td>Data Access</td>
+        <td><strong>Parameterized queries and no hardcoded values in JPQL</strong><br><small>The getAllHappyCoordinates query uses a hardcoded string literal moodStatus = 'HAPPY' instead of a bind parameter (e.g. :status of type MoodStatus). Hardcoded enum values in queries are fragile — if t...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</code></small></td>
+    </tr>
+    <tr>
+        <td>21</td>
+        <td><span class="badge warn">WARN</span></td>
+        <td>Data Access</td>
+        <td><strong>Service-layer @Transactional boundaries</strong><br><small>No @Transactional annotations exist on MoodServiceImplementation or any of its methods. While Spring Data repository methods are individually transactional by default, the service layer does not decla...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></small></td>
+    </tr>
+    <tr>
+        <td>22</td>
+        <td><span class="badge warn">WARN</span></td>
+        <td>Data Access</td>
+        <td><strong>Database schema migration tooling</strong><br><small>No database migration tool (Flyway or Liquibase) is present in pom.xml. The schema is managed implicitly by JPA/Hibernate ddl-auto (not explicitly configured in application.properties, so it defaults ...</small></td>
+        <td><small><code>pom.xml</code>, <code>src/main/resources/application.properties</code>, <code>src/main/resources/data.sql</code></small></td>
+    </tr>
+    <tr>
+        <td>23</td>
+        <td><span class="badge warn">WARN</span></td>
+        <td>Data Access</td>
+        <td><strong>Connection pool configuration</strong><br><small>No explicit connection pool settings are configured. Spring Boot 2.7 includes HikariCP by default (via spring-boot-starter-data-jpa), so basic pooling works out of the box. However, no spring.datasour...</small></td>
+        <td><small><code>src/main/resources/application.properties</code>, <code>pom.xml</code></small></td>
+    </tr>
+    <tr>
+        <td>24</td>
+        <td><span class="badge warn">WARN</span></td>
+        <td>Data Access</td>
+        <td><strong>Pagination support for list queries</strong><br><small>All repository query methods return unbounded List results with no pagination support. getMoodDistribution, getAllHappyCoordinates, and getAllLocations all return full result sets. For datasets that c...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</code></small></td>
+    </tr>
+    <tr>
+        <td>25</td>
+        <td><span class="badge warn">WARN</span></td>
+        <td>Data Access</td>
+        <td><strong>Entity uses appropriate ID generation strategy</strong><br><small>Mood uses @GeneratedValue without specifying a strategy (defaults to GenerationType.AUTO). For H2 this works but for production databases the strategy matters significantly. Additionally, the ID field...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/model/Mood.java</code></small></td>
+    </tr>
+    <tr>
+        <td>26</td>
+        <td><span class="badge warn">WARN</span></td>
+        <td>Authentication</td>
+        <td><strong>Authentication mechanism (deprecated API)</strong><br><small>SpringSecurityConfig extends WebSecurityConfigurerAdapter, which has been deprecated since Spring Security 5.7 (the version pulled in by Spring Boot 2.7.0 used here). The configuration should be migra...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java</code></small></td>
+    </tr>
+    <tr>
+        <td>27</td>
+        <td><span class="badge warn">WARN</span></td>
+        <td>Authentication</td>
+        <td><strong>Authentication scheme</strong><br><small>The application relies on HTTP Basic authentication (.httpBasic()), which transmits credentials (Base64-encoded, not encrypted) with every request. This is acceptable only over HTTPS for simple intern...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java</code></small></td>
+    </tr>
+    <tr>
+        <td>28</td>
+        <td><span class="badge warn">WARN</span></td>
+        <td>Authentication</td>
+        <td><strong>Session management configuration</strong><br><small>No explicit session management is configured (session fixation protection strategy, concurrent session control, session timeout, or SessionCreationPolicy). Spring Security defaults apply (session fixa...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java</code></small></td>
+    </tr>
+    <tr>
+        <td>29</td>
+        <td><span class="badge warn">WARN</span></td>
+        <td>Authentication</td>
+        <td><strong>Security response headers</strong><br><small>Only frameOptions().sameOrigin() is explicitly configured (to support the H2 console iframe). No explicit configuration exists for Content-Security-Policy, Strict-Transport-Security (HSTS), X-Content-...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java</code></small></td>
+    </tr>
+    <tr>
+        <td>30</td>
+        <td><span class="badge warn">WARN</span></td>
+        <td>Authentication</td>
+        <td><strong>Authenticated user identity extraction</strong><br><small>The controller obtains the current user via request.getRemoteUser(), which works but couples the controller to the Servlet API. Spring Security provides more idiomatic and type-safe alternatives: @Aut...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></small></td>
+    </tr>
+    <tr>
+        <td>31</td>
+        <td><span class="badge warn">WARN</span></td>
+        <td>Authentication</td>
+        <td><strong>CORS configuration</strong><br><small>No CORS configuration is defined in the security config or via @CrossOrigin annotations on the controller. If the API is consumed by a browser-based frontend on a different origin, requests will be bl...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java</code>, <code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></small></td>
+    </tr>
+    <tr>
+        <td>32</td>
+        <td><span class="badge warn">WARN</span></td>
+        <td>Validation</td>
+        <td><strong>Enum field validation in MoodStatus</strong><br><small>`MoodStatus` enum has `@NotBlank` on its internal `mood` String field. This annotation is never evaluated because the enum constructor always provides a non-blank value, and the field is never subject...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/model/MoodStatus.java</code>, <code>src/main/java/com/example/moodsense/demo/model/Mood.java</code>, <code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></small></td>
+    </tr>
+    <tr>
+        <td>33</td>
+        <td><span class="badge warn">WARN</span></td>
+        <td>Validation</td>
+        <td><strong>Service-layer input validation</strong><br><small>The service layer (`MoodServiceImplementation`) performs no defensive input validation. `save(Mood)` passes the entity straight to the repository. `getBestLocationFromCoordinate` will return `null` if...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></small></td>
+    </tr>
+    <tr>
+        <td>34</td>
+        <td><span class="badge warn">WARN</span></td>
+        <td>Validation</td>
+        <td><strong>Constraint message customization</strong><br><small>Custom validation messages are provided for `@NotNull`, `@Min`, and `@Max` on `Mood.latitude` and `Mood.longitude` (e.g. "You must enter latitude for Demo purpose"), which is good practice. However, t...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/model/Mood.java</code>, <code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></small></td>
+    </tr>
+    <tr>
+        <td>35</td>
+        <td><span class="badge warn">WARN</span></td>
+        <td>Error Handling</td>
+        <td><strong>HTTP 500 exposure on unhandled exceptions</strong><br><small>Without a @RestControllerAdvice or any global exception handler, all unhandled exceptions (NullPointerException from null locations, database errors, validation failures) result in Spring Boot's defau...</small></td>
+        <td><small><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code>, <code>src/main/resources/application.properties</code></small></td>
+    </tr></tbody>
+  </table>
+
+  <h2 class="section-title">Category Breakdown</h2>
+  
+    <div class="category-card">
+        <div class="category-header">
+            <h3>API Design</h3>
+            <div class="category-stats">
+                <span class="stat pass-stat">1 pass</span>
+                <span class="stat warn-stat">7 warn</span>
+                <span class="stat fail-stat">10 fail</span>
+            </div>
+        </div>
+        <div class="progress-bar-container">
+            <div class="progress-bar" style="width: 6%; background: #ef4444;"></div>
+        </div>
+        <div class="category-score">6%</div>
+        <div class="findings-list">
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>RESTful URI naming conventions</strong> <span class="rule-id">api_001</span></div>
+            <div class="finding-detail">All three endpoint URIs use verbs and camelCase: /uploadMood, /getMoodDistribution, /getHappyNearByLocations. REST best practice requires noun-based, lowercase, hyphen-separated resource paths (e.g., /moods, /mood-distributions, /locations/happy-nearby). The current naming makes the API look like an RPC interface rather than a resource-oriented REST API.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>HTTP method semantics and status codes</strong> <span class="rule-id">api_002</span></div>
+            <div class="finding-detail">The uploadMood POST endpoint returns void, which results in a default 200 OK. For a resource-creating operation, the endpoint should return 201 Created (ideally with a Location header pointing to the new resource and the created entity in the body). The GET endpoints correctly return 200 OK.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>API versioning strategy</strong> <span class="rule-id">api_003</span></div>
+            <div class="finding-detail">There is no API versioning mechanism in place. The controller class has no class-level @RequestMapping with a versioned base path (e.g., /api/v1), and no header-based or media-type-based versioning is configured. Without versioning, breaking changes cannot be introduced safely for existing clients.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></div>
+        </div>
+        <div class="finding warn">
+            <div class="finding-header"><span class="badge warn">WARN</span> <strong>Use of @GetMapping/@PostMapping shortcut annotations</strong> <span class="rule-id">api_004</span></div>
+            <div class="finding-detail">All endpoints use the verbose @RequestMapping(value = "...", method = RequestMethod.XXX) form instead of the more concise and idiomatic @GetMapping and @PostMapping annotations available since Spring 4.3. While functionally equivalent, the shorthand annotations improve readability and are the recommended practice.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>Request body handling for POST</strong> <span class="rule-id">api_005</span></div>
+            <div class="finding-detail">The uploadMood POST endpoint accepts data via individual @RequestParam parameters and an unbound Mood form object instead of using @RequestBody with a JSON request DTO. REST APIs should accept structured JSON bodies for resource creation, enabling proper content negotiation and deserialization. The current approach is form-parameter-style rather than RESTful JSON.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>Input validation on request body</strong> <span class="rule-id">api_006</span></div>
+            <div class="finding-detail">The Mood model has @NotNull, @Min, and @Max validation annotations, but the controller never triggers bean validation on the Mood object because @Valid or @Validated is not placed on the Mood parameter itself. @Validated is only applied to individual @RequestParam parameters (moodStatus, latitude, longitude). The latitude and longitude are set manually on the Mood object after binding, bypassing the entity-level constraints entirely.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code>, <code>src/main/java/com/example/moodsense/demo/model/Mood.java</code></div>
+        </div>
+        <div class="finding warn">
+            <div class="finding-header"><span class="badge warn">WARN</span> <strong>Content type declarations (produces/consumes)</strong> <span class="rule-id">api_007</span></div>
+            <div class="finding-detail">None of the @RequestMapping annotations declare explicit 'produces' or 'consumes' media types (e.g., MediaType.APPLICATION_JSON_VALUE). While Spring Boot defaults to JSON via Jackson on the classpath, explicit declarations improve API clarity, enable strict content negotiation, and make the contract self-documenting.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>Consistent ResponseEntity usage</strong> <span class="rule-id">api_008</span></div>
+            <div class="finding-detail">uploadMood returns void while getMoodDistribution and getHappyNearByLocations return ResponseEntity<List<...>>. Mixing return types across endpoints in the same controller creates an inconsistent API contract. All endpoints should use ResponseEntity (or a consistent wrapper) so clients receive predictable response structures and status codes.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>Pagination support for collection endpoints</strong> <span class="rule-id">api_009</span></div>
+            <div class="finding-detail">getMoodDistribution and getHappyNearByLocations both return raw List<> without any pagination support (no Pageable parameter, no Page/Slice wrapper, no limit/offset query params). For production APIs, unbounded collection responses can cause performance issues and excessive memory use as data grows.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code>, <code>src/main/java/com/example/moodsense/demo/service/MoodService.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>DTO separation from domain entities</strong> <span class="rule-id">api_010</span></div>
+            <div class="finding-detail">The controller directly exposes JPA entities (Mood, Location) and projection interfaces (MoodDistribution) as API request/response types. There are no dedicated DTOs or API resource representations. Exposing entities couples the API contract to the persistence schema, risks leaking internal fields (e.g., database IDs), and makes independent evolution of the API and data model difficult.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code>, <code>src/main/java/com/example/moodsense/demo/model/Mood.java</code>, <code>src/main/java/com/example/moodsense/demo/model/Location.java</code>, <code>src/main/java/com/example/moodsense/demo/model/MoodDistribution.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>API documentation (OpenAPI/Swagger)</strong> <span class="rule-id">api_011</span></div>
+            <div class="finding-detail">There are no OpenAPI/Swagger annotations (@Operation, @ApiResponse, @Schema, etc.) on the controller or model classes, and no springdoc-openapi or springfox dependency in pom.xml. The API is entirely undocumented, making it difficult for consumers to discover endpoints, understand request/response schemas, or integrate without reading source code.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code>, <code>pom.xml</code></div>
+        </div>
+        <div class="finding warn">
+            <div class="finding-header"><span class="badge warn">WARN</span> <strong>Controller base path</strong> <span class="rule-id">api_012</span></div>
+            <div class="finding-detail">The controller class has no class-level @RequestMapping to define a shared base path (e.g., /api/moods). Each endpoint defines its full path individually. A common base path groups related endpoints, reduces duplication, and enables cleaner reverse-proxy or gateway routing.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></div>
+        </div>
+        <div class="finding warn">
+            <div class="finding-header"><span class="badge warn">WARN</span> <strong>Use of HttpServletRequest/HttpServletResponse in controller</strong> <span class="rule-id">api_013</span></div>
+            <div class="finding-detail">uploadMood accepts both HttpServletRequest and HttpServletResponse as parameters, and the GET endpoints accept HttpServletRequest. Directly depending on Servlet API objects couples the controller to the Servlet container and reduces testability. User identity should be injected via @AuthenticationPrincipal or Principal, and response status should be set via ResponseEntity or @ResponseStatus.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></div>
+        </div>
+        <div class="finding warn">
+            <div class="finding-header"><span class="badge warn">WARN</span> <strong>CORS configuration</strong> <span class="rule-id">api_014</span></div>
+            <div class="finding-detail">There is no @CrossOrigin annotation on the controller and no WebMvcConfigurer bean defining CORS mappings. If the API is consumed by browser-based clients from different origins, requests will be blocked. For a backend-only API this may be intentional, but it should be explicitly configured.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java</code>, <code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></div>
+        </div>
+        <div class="finding warn">
+            <div class="finding-header"><span class="badge warn">WARN</span> <strong>REST resource CRUD completeness</strong> <span class="rule-id">api_015</span></div>
+            <div class="finding-detail">The API only supports creating a mood (POST) and reading aggregated data (GET mood distribution, GET happy locations). There are no endpoints for retrieving a single mood by ID, updating a mood (PUT/PATCH), or deleting a mood (DELETE). The API surface is incomplete for full resource lifecycle management of the Mood entity.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></div>
+        </div>
+        <div class="finding pass">
+            <div class="finding-header"><span class="badge pass">PASS</span> <strong>Idempotency and safe method semantics</strong> <span class="rule-id">api_016</span></div>
+            <div class="finding-detail">The two GET endpoints (getMoodDistribution, getHappyNearByLocations) are safe and idempotent—they only read data. The POST endpoint (uploadMood) creates a new resource, which is appropriately non-idempotent. HTTP method semantics are correctly aligned with the operations performed.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>Response body for write operations</strong> <span class="rule-id">api_017</span></div>
+            <div class="finding-detail">The uploadMood POST endpoint returns void, providing no response body to the client. Best practice for resource-creating endpoints is to return the created resource (or at minimum its ID and a Location header) so clients can confirm what was persisted without making a follow-up request.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></div>
+        </div>
+        <div class="finding warn">
+            <div class="finding-header"><span class="badge warn">WARN</span> <strong>Path variable usage for resource identification</strong> <span class="rule-id">api_018</span></div>
+            <div class="finding-detail">No endpoints use @PathVariable for resource identification (e.g., /moods/{id}). The user identity is extracted from HttpServletRequest.getRemoteUser() for all operations. While authentication-based scoping is valid, standard REST design expects path variables for identifying specific resources.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></div>
+        </div></div>
+    </div>
+    <div class="category-card">
+        <div class="category-header">
+            <h3>Domain Structure</h3>
+            <div class="category-stats">
+                <span class="stat pass-stat">2 pass</span>
+                <span class="stat warn-stat">4 warn</span>
+                <span class="stat fail-stat">4 fail</span>
+            </div>
+        </div>
+        <div class="progress-bar-container">
+            <div class="progress-bar" style="width: 20%; background: #ef4444;"></div>
+        </div>
+        <div class="category-score">20%</div>
+        <div class="findings-list">
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>Package naming convention</strong> <span class="rule-id">dom_001</span></div>
+            <div class="finding-detail">The persistence layer package is named `repositary` (misspelled) instead of the standard `repository`. This typo propagates into import statements in MoodServiceImplementation and MoodServiceImplementationTest, breaking Java naming expectations and confusing maintainers and tooling alike.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</code>, <code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code>, <code>src/test/java/com/example/moodsense/demo/service/MoodServiceImplementationTest.java</code></div>
+        </div>
+        <div class="finding pass">
+            <div class="finding-header"><span class="badge pass">PASS</span> <strong>Separation of concerns</strong> <span class="rule-id">dom_002</span></div>
+            <div class="finding-detail">The codebase uses distinct packages for controller, service, persistence (repositary), model, and config. The controller delegates exclusively to the MoodService interface and never calls the repository directly, maintaining proper layering.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code>, <code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code>, <code>src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</code></div>
+        </div>
+        <div class="finding warn">
+            <div class="finding-header"><span class="badge warn">WARN</span> <strong>Domain model richness</strong> <span class="rule-id">dom_003</span></div>
+            <div class="finding-detail">Domain entities (Mood, Location) and the MoodStatus enum are pure data carriers generated via Lombok @Data with no domain behavior. Business rules such as distance calculation and mood grouping live entirely in MoodServiceImplementation and repository query projections, following an anemic domain model anti-pattern rather than a rich domain model.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/model/Mood.java</code>, <code>src/main/java/com/example/moodsense/demo/model/Location.java</code>, <code>src/main/java/com/example/moodsense/demo/model/MoodStatus.java</code>, <code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>Entity design</strong> <span class="rule-id">dom_004</span></div>
+            <div class="finding-detail">Multiple entity design issues: (1) Neither Mood nor Location has audit fields (createdAt/updatedAt). (2) Mood declares its @Id as primitive `int` with @GeneratedValue, but MoodRepository extends CrudRepository<Mood, String> — the generic ID type (String) does not match the entity's actual ID type (int), which will cause runtime type-mismatch errors on certain CrudRepository operations. (3) Lombok @Data on @Entity classes generates equals/hashCode based on all fields including the mutable auto-generated id, which is unsafe for JPA managed entities in collections and detached/managed state comparisons.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/model/Mood.java</code>, <code>src/main/java/com/example/moodsense/demo/model/Location.java</code>, <code>src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</code></div>
+        </div>
+        <div class="finding warn">
+            <div class="finding-header"><span class="badge warn">WARN</span> <strong>Value objects and projections</strong> <span class="rule-id">dom_005</span></div>
+            <div class="finding-detail">Coordinate and MoodDistribution are plain interfaces used as Spring Data JPA query projections. While they work for mapping query results, they are not explicit immutable value objects (e.g., Java records or final classes with validation). The domain does not define a formal value-object boundary for concepts like geographic coordinates or mood statistics.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/model/Coordinate.java</code>, <code>src/main/java/com/example/moodsense/demo/model/MoodDistribution.java</code>, <code>src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>DTO separation</strong> <span class="rule-id">dom_006</span></div>
+            <div class="finding-detail">The REST controller's uploadMood endpoint accepts the Mood JPA entity directly as a method parameter and mutates it in-place (setting person, latitude, longitude, moodStatus) before persisting. No request or response DTOs exist, coupling the HTTP API schema tightly to the persistence model and exposing internal entity structure to clients.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code>, <code>src/main/java/com/example/moodsense/demo/model/Mood.java</code></div>
+        </div>
+        <div class="finding pass">
+            <div class="finding-header"><span class="badge pass">PASS</span> <strong>Interface-driven service design</strong> <span class="rule-id">dom_007</span></div>
+            <div class="finding-detail">MoodService is defined as a dedicated interface and MoodServiceImplementation is its concrete @Service implementation. The controller depends on the MoodService interface, enabling proper dependency inversion and testability.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/service/MoodService.java</code>, <code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code>, <code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></div>
+        </div>
+        <div class="finding warn">
+            <div class="finding-header"><span class="badge warn">WARN</span> <strong>Class and method naming conventions</strong> <span class="rule-id">dom_008</span></div>
+            <div class="finding-detail">Most names follow Java conventions, but several are suboptimal: (1) `getHappyNearByLocations` uses awkward camelCase for 'NearBy' — `getHappyNearbyLocations` would be more natural. (2) `MoodServiceImplementation` is verbose; the conventional suffix is `Impl` (e.g., `MoodServiceImpl`). (3) The misspelled `repositary` package is covered separately under dom_001.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/service/MoodService.java</code>, <code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code>, <code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></div>
+        </div>
+        <div class="finding warn">
+            <div class="finding-header"><span class="badge warn">WARN</span> <strong>Single Responsibility Principle</strong> <span class="rule-id">dom_009</span></div>
+            <div class="finding-detail">MoodServiceImplementation mixes application-layer orchestration (delegating save and query calls to the repository) with spatial matching logic (Euclidean distance computation in getBestLocationFromCoordinate and coordinate-to-location mapping in getLocationsFromCoordinates). The distance/location resolution concern could be extracted into a dedicated component or utility to improve cohesion.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>Application entry point naming</strong> <span class="rule-id">dom_010</span></div>
+            <div class="finding-detail">The Spring Boot main class is named `DemoApplication` — a generic placeholder that does not reflect the product identity. A domain-aligned name such as `MoodSenseApplication` would improve clarity in logs, deployment artifacts, and documentation.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/DemoApplication.java</code></div>
+        </div></div>
+    </div>
+    <div class="category-card">
+        <div class="category-header">
+            <h3>Business Logic</h3>
+            <div class="category-stats">
+                <span class="stat pass-stat">0 pass</span>
+                <span class="stat warn-stat">6 warn</span>
+                <span class="stat fail-stat">6 fail</span>
+            </div>
+        </div>
+        <div class="progress-bar-container">
+            <div class="progress-bar" style="width: 0%; background: #ef4444;"></div>
+        </div>
+        <div class="category-score">0%</div>
+        <div class="findings-list">
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>Logic correctness – distance calculation bug</strong> <span class="rule-id">biz_001</span></div>
+            <div class="finding-detail">In MoodServiceImplementation.getBestLocationFromCoordinate (line 45), the Euclidean distance formula is incorrect. The second squared term computes `location.getLatitude() - coordinate.getLongitude()` instead of `location.getLongitude() - coordinate.getLongitude()`. This means the distance is calculated using latitude twice (once against the coordinate's latitude and once against the coordinate's longitude), completely ignoring the location's longitude. This will select the wrong nearest location in many cases.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>Transaction management</strong> <span class="rule-id">biz_002</span></div>
+            <div class="finding-detail">No @Transactional annotation exists anywhere in the service layer. MoodServiceImplementation.save() delegates directly to CrudRepository.save() without declaring an explicit transaction boundary. While Spring Data provides a default transaction for individual repository calls, the service layer should own transactional boundaries so that future multi-step operations can be wrapped atomically with consistent rollback rules and propagation settings.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code>, <code>src/main/java/com/example/moodsense/demo/service/MoodService.java</code></div>
+        </div>
+        <div class="finding warn">
+            <div class="finding-header"><span class="badge warn">WARN</span> <strong>Service layer completeness – controller performing entity assembly</strong> <span class="rule-id">biz_003</span></div>
+            <div class="finding-detail">The uploadMood controller method assembles the Mood entity (setting person, latitude, longitude, moodStatus) before calling moodService.save(). Entity construction and invariant enforcement belong in the service layer, not the HTTP transport layer. A dedicated service method (e.g. recordMood(String user, MoodStatus status, int lat, int lon)) would keep the controller transport-only and centralize business rules.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code>, <code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>Null safety in location resolution</strong> <span class="rule-id">biz_004</span></div>
+            <div class="finding-detail">getBestLocationFromCoordinate initialises result to null and only assigns it if the distance improves. When the Location table is empty, it returns null. getLocationsFromCoordinates then adds that null directly to the result list without a guard, meaning the API can return a list containing null elements. Additionally, neither method checks for a null coordinate list or null remoteUser.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>Performance – N+1 query on getAllLocations</strong> <span class="rule-id">biz_005</span></div>
+            <div class="finding-detail">getLocationsFromCoordinates iterates over every happy coordinate and calls getBestLocationFromCoordinate for each, which in turn calls moodRepository.getAllLocations() on every invocation. This produces N+1 database queries (1 for coordinates, N for locations) instead of loading the full location list once and reusing it in memory. For users with many happy-mood entries this degrades performance significantly.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></div>
+        </div>
+        <div class="finding warn">
+            <div class="finding-header"><span class="badge warn">WARN</span> <strong>Magic values – hardcoded enum string in JPQL</strong> <span class="rule-id">biz_006</span></div>
+            <div class="finding-detail">The getAllHappyCoordinates query hardcodes the string literal 'HAPPY' in the WHERE clause. If the MoodStatus enum value is renamed or if case-sensitivity behavior changes, the query silently drifts. A parameterised bind variable (e.g. ':status' supplied from Java code) would be safer and keep the enum as the single source of truth.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>Method visibility – public helpers on service implementation</strong> <span class="rule-id">biz_007</span></div>
+            <div class="finding-detail">getLocationsFromCoordinates and getBestLocationFromCoordinate are public methods on MoodServiceImplementation but are not declared on the MoodService interface and are only used internally. They should be private (or package-private) to prevent external callers from bypassing the intended service API and to reduce the class's public contract.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>Repository generic ID type mismatch</strong> <span class="rule-id">biz_008</span></div>
+            <div class="finding-detail">MoodRepository extends CrudRepository<Mood, String>, declaring String as the entity ID type. However, Mood declares its @Id field as `private int id`. The ID type parameter should be Integer (the boxed type of int). This mismatch means Spring Data's generated methods like findById(String) and deleteById(String) accept the wrong type and may fail or behave unexpectedly at runtime.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</code>, <code>src/main/java/com/example/moodsense/demo/model/Mood.java</code></div>
+        </div>
+        <div class="finding warn">
+            <div class="finding-header"><span class="badge warn">WARN</span> <strong>Input validation gaps</strong> <span class="rule-id">biz_009</span></div>
+            <div class="finding-detail">uploadMood uses @Validated on individual @RequestParam arguments but the Mood object itself (which carries @Min/@Max/@NotNull annotations) is not annotated with @Valid or @Validated on the method parameter, so its Bean Validation constraints are never triggered during binding. request.getRemoteUser() is used directly without null-check or normalization. The controller also returns void with no explicit response status for success, relying on the default 200 even though 201 Created would be more appropriate for a POST that creates a resource.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code>, <code>src/main/java/com/example/moodsense/demo/model/Mood.java</code></div>
+        </div>
+        <div class="finding warn">
+            <div class="finding-header"><span class="badge warn">WARN</span> <strong>Duplicate results in happy-location list</strong> <span class="rule-id">biz_010</span></div>
+            <div class="finding-detail">getLocationsFromCoordinates maps each happy coordinate to its nearest location independently. If multiple distinct coordinates resolve to the same Location, the returned list will contain duplicate Location entries. There is no deduplication step (e.g. using a Set or distinct filtering), which can confuse API consumers expecting a unique list of locations.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></div>
+        </div>
+        <div class="finding warn">
+            <div class="finding-header"><span class="badge warn">WARN</span> <strong>Wasteful initial distance value</strong> <span class="rule-id">biz_011</span></div>
+            <div class="finding-detail">getBestLocationFromCoordinate initializes the distance sentinel with `Double.valueOf(Integer.MAX_VALUE)`. While functionally harmless (Integer.MAX_VALUE is large enough for the constrained [-10,10] coordinate space), `Double.MAX_VALUE` is the idiomatic choice for a 'find minimum' sentinel in double-precision arithmetic. The autoboxing via Double.valueOf is also unnecessary since the variable is already Double.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></div>
+        </div>
+        <div class="finding warn">
+            <div class="finding-header"><span class="badge warn">WARN</span> <strong>Read-path side effects and consistency</strong> <span class="rule-id">biz_012</span></div>
+            <div class="finding-detail">getHappyNearByLocations is a read-only operation but triggers multiple independent database queries (one for coordinates, then N for locations). Because there is no @Transactional(readOnly=true), these reads can observe inconsistent snapshots if locations are modified concurrently. Wrapping the read path in a read-only transaction would improve consistency and allow the JPA provider to apply read optimizations.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></div>
+        </div></div>
+    </div>
+    <div class="category-card">
+        <div class="category-header">
+            <h3>Data Access</h3>
+            <div class="category-stats">
+                <span class="stat pass-stat">3 pass</span>
+                <span class="stat warn-stat">8 warn</span>
+                <span class="stat fail-stat">4 fail</span>
+            </div>
+        </div>
+        <div class="progress-bar-container">
+            <div class="progress-bar" style="width: 20%; background: #ef4444;"></div>
+        </div>
+        <div class="category-score">20%</div>
+        <div class="findings-list">
+        <div class="finding warn">
+            <div class="finding-header"><span class="badge warn">WARN</span> <strong>Repository extends appropriate Spring Data interface</strong> <span class="rule-id">da_001</span></div>
+            <div class="finding-detail">MoodRepository extends CrudRepository<Mood, String>. While CrudRepository is a valid Spring Data base interface, JpaRepository is the more idiomatic choice for Spring Data JPA projects. JpaRepository provides additional JPA-specific methods such as flush(), saveAndFlush(), findAll() returning List, and batch delete helpers. Using JpaRepository would be more aligned with best practices for a JPA-backed application.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>Entity ID type matches repository generic parameter</strong> <span class="rule-id">da_002</span></div>
+            <div class="finding-detail">Mood entity declares its primary key as '@Id @GeneratedValue private int id' (type int/Integer), but MoodRepository is parameterized as CrudRepository<Mood, String>. The second generic type must match the entity's ID type. This mismatch means type-safe repository methods like findById(String) and deleteById(String) will fail or behave incorrectly at runtime. The repository should be CrudRepository<Mood, Integer> (or JpaRepository<Mood, Integer>).</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</code>, <code>src/main/java/com/example/moodsense/demo/model/Mood.java</code></div>
+        </div>
+        <div class="finding warn">
+            <div class="finding-header"><span class="badge warn">WARN</span> <strong>Production-grade database configuration</strong> <span class="rule-id">da_003</span></div>
+            <div class="finding-detail">application.properties configures an in-memory H2 database (jdbc:h2:mem:testdb) with the H2 console enabled. H2 in-memory mode loses all data on application restart and is unsuitable for production. There are no Spring profiles to distinguish dev/test/prod configurations. A production deployment should use a durable RDBMS (PostgreSQL, MySQL, etc.) and the H2 console should be disabled. Additionally, spring.datasource.password is empty, which is acceptable for H2 dev mode but highlights the lack of production credential management.</div>
+            <div class="files"><code>src/main/resources/application.properties</code>, <code>pom.xml</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>N+1 / repeated query problem</strong> <span class="rule-id">da_004</span></div>
+            <div class="finding-detail">MoodServiceImplementation.getHappyNearByLocations iterates over a list of coordinates and calls getBestLocationFromCoordinate for each one. getBestLocationFromCoordinate calls moodRepository.getAllLocations() on every invocation, executing the same 'select new Location(name, latitude, longitude) from Location' query N times (once per coordinate). The locations list should be fetched once and passed into the loop, or the distance calculation should be pushed into a single database query. This is a serious performance defect that degrades linearly with the number of happy coordinates.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code>, <code>src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</code></div>
+        </div>
+        <div class="finding warn">
+            <div class="finding-header"><span class="badge warn">WARN</span> <strong>Parameterized queries and no hardcoded values in JPQL</strong> <span class="rule-id">da_005</span></div>
+            <div class="finding-detail">The getAllHappyCoordinates query uses a hardcoded string literal moodStatus = 'HAPPY' instead of a bind parameter (e.g. :status of type MoodStatus). Hardcoded enum values in queries are fragile — if the enum name changes the query silently breaks. Using a bind parameter improves type safety, allows compile-time checking, and keeps queries consistent with the enum definition. The other two queries correctly use :remoteUser bind parameters.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</code></div>
+        </div>
+        <div class="finding warn">
+            <div class="finding-header"><span class="badge warn">WARN</span> <strong>Service-layer @Transactional boundaries</strong> <span class="rule-id">da_006</span></div>
+            <div class="finding-detail">No @Transactional annotations exist on MoodServiceImplementation or any of its methods. While Spring Data repository methods are individually transactional by default, the service layer does not declare explicit transactional boundaries. The getHappyNearByLocations method performs multiple repository calls (getAllHappyCoordinates + getAllLocations N times) without a surrounding transaction, meaning each query may see different data snapshots. Adding @Transactional at the class or method level — with readOnly=true for read methods — would improve consistency, enable performance optimizations, and make the transactional intent explicit.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></div>
+        </div>
+        <div class="finding pass">
+            <div class="finding-header"><span class="badge pass">PASS</span> <strong>Entity relationship fetch strategy (LAZY vs EAGER)</strong> <span class="rule-id">da_007</span></div>
+            <div class="finding-detail">The Mood and Location entities contain only scalar fields and an enum — no @OneToMany, @ManyToOne, @ManyToMany, or @OneToOne associations. There are no entity relationships that require fetch strategy configuration, so no LAZY/EAGER misconfiguration is present. The Coordinate and MoodDistribution interfaces serve as Spring Data projections rather than entity associations.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/model/Mood.java</code>, <code>src/main/java/com/example/moodsense/demo/model/Location.java</code></div>
+        </div>
+        <div class="finding warn">
+            <div class="finding-header"><span class="badge warn">WARN</span> <strong>Database schema migration tooling</strong> <span class="rule-id">da_008</span></div>
+            <div class="finding-detail">No database migration tool (Flyway or Liquibase) is present in pom.xml. The schema is managed implicitly by JPA/Hibernate ddl-auto (not explicitly configured in application.properties, so it defaults to create-drop for embedded databases). Initial data is loaded via data.sql using spring.jpa.defer-datasource-initialization=true. For production, versioned schema migrations are essential for reproducibility, auditability, and safe rollbacks.</div>
+            <div class="files"><code>pom.xml</code>, <code>src/main/resources/application.properties</code>, <code>src/main/resources/data.sql</code></div>
+        </div>
+        <div class="finding warn">
+            <div class="finding-header"><span class="badge warn">WARN</span> <strong>Connection pool configuration</strong> <span class="rule-id">da_009</span></div>
+            <div class="finding-detail">No explicit connection pool settings are configured. Spring Boot 2.7 includes HikariCP by default (via spring-boot-starter-data-jpa), so basic pooling works out of the box. However, no spring.datasource.hikari.* properties are set for maximum-pool-size, minimum-idle, connection-timeout, idle-timeout, or leak-detection-threshold. Production deployments should tune these parameters based on expected load and database connection limits.</div>
+            <div class="files"><code>src/main/resources/application.properties</code>, <code>pom.xml</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>Repository package naming convention</strong> <span class="rule-id">da_010</span></div>
+            <div class="finding-detail">The repository package is named 'repositary' (com.example.moodsense.demo.repositary), which is a misspelling of 'repository'. This affects discoverability, IDE navigation, and violates standard Java naming conventions. The misspelling propagates through import statements in MoodServiceImplementation and MoodServiceImplementationTest. The package should be renamed to 'repository'.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</code>, <code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code>, <code>src/test/java/com/example/moodsense/demo/service/MoodServiceImplementationTest.java</code></div>
+        </div>
+        <div class="finding warn">
+            <div class="finding-header"><span class="badge warn">WARN</span> <strong>Pagination support for list queries</strong> <span class="rule-id">da_011</span></div>
+            <div class="finding-detail">All repository query methods return unbounded List results with no pagination support. getMoodDistribution, getAllHappyCoordinates, and getAllLocations all return full result sets. For datasets that could grow large, queries should accept Pageable parameters and return Page or Slice objects to prevent memory exhaustion and slow response times. Even for a demo app, adding pagination would demonstrate production readiness.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>Distance calculation bug in data access logic</strong> <span class="rule-id">da_012</span></div>
+            <div class="finding-detail">In MoodServiceImplementation.getBestLocationFromCoordinate, the Euclidean distance formula has a bug: it uses location.getLatitude() - coordinate.getLongitude() for the second dimension instead of location.getLongitude() - coordinate.getLongitude(). This means the nearest location calculation is incorrect and will return wrong results. The formula should be: Math.sqrt(Math.pow(location.getLatitude() - coordinate.getLatitude(), 2) + Math.pow(location.getLongitude() - coordinate.getLongitude(), 2)).</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></div>
+        </div>
+        <div class="finding pass">
+            <div class="finding-header"><span class="badge pass">PASS</span> <strong>Data initialization strategy</strong> <span class="rule-id">da_013</span></div>
+            <div class="finding-detail">The application uses data.sql with spring.jpa.defer-datasource-initialization=true to seed Location reference data after Hibernate creates the schema. This is a valid approach for development and demo purposes with an embedded H2 database. The INSERT statements are properly formed with consistent data.</div>
+            <div class="files"><code>src/main/resources/data.sql</code>, <code>src/main/resources/application.properties</code></div>
+        </div>
+        <div class="finding pass">
+            <div class="finding-header"><span class="badge pass">PASS</span> <strong>Use of Spring Data projections</strong> <span class="rule-id">da_014</span></div>
+            <div class="finding-detail">The codebase correctly uses interface-based projections (Coordinate, MoodDistribution) for repository query methods that return partial entity data. This avoids loading full entities when only specific fields are needed and is a good Spring Data practice. getMoodDistribution returns a projection with moodStatus and count, and getAllHappyCoordinates returns a projection with latitude and longitude.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/model/Coordinate.java</code>, <code>src/main/java/com/example/moodsense/demo/model/MoodDistribution.java</code>, <code>src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</code></div>
+        </div>
+        <div class="finding warn">
+            <div class="finding-header"><span class="badge warn">WARN</span> <strong>Entity uses appropriate ID generation strategy</strong> <span class="rule-id">da_015</span></div>
+            <div class="finding-detail">Mood uses @GeneratedValue without specifying a strategy (defaults to GenerationType.AUTO). For H2 this works but for production databases the strategy matters significantly. Additionally, the ID field uses primitive int rather than Integer wrapper, which means null cannot represent an unsaved entity — this can cause issues with merge vs persist detection in JPA. Best practice is to use Long/Integer wrapper types for @Id fields and specify an explicit generation strategy.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/model/Mood.java</code></div>
+        </div></div>
+    </div>
+    <div class="category-card">
+        <div class="category-header">
+            <h3>Authentication</h3>
+            <div class="category-stats">
+                <span class="stat pass-stat">2 pass</span>
+                <span class="stat warn-stat">6 warn</span>
+                <span class="stat fail-stat">7 fail</span>
+            </div>
+        </div>
+        <div class="progress-bar-container">
+            <div class="progress-bar" style="width: 13%; background: #ef4444;"></div>
+        </div>
+        <div class="category-score">13%</div>
+        <div class="findings-list">
+        <div class="finding warn">
+            <div class="finding-header"><span class="badge warn">WARN</span> <strong>Authentication mechanism (deprecated API)</strong> <span class="rule-id">auth_001</span></div>
+            <div class="finding-detail">SpringSecurityConfig extends WebSecurityConfigurerAdapter, which has been deprecated since Spring Security 5.7 (the version pulled in by Spring Boot 2.7.0 used here). The configuration should be migrated to a component-based approach using a SecurityFilterChain @Bean method instead of overriding configure() methods.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>Credential storage strategy</strong> <span class="rule-id">auth_002</span></div>
+            <div class="finding-detail">User credentials are hardcoded in-memory via InMemoryUserDetailsManager with literal usernames ('user1', 'user2') and passwords ('pwd1', 'pwd2') defined directly in the Java source. Production applications must use a persistent, externally managed user store (database-backed UserDetailsService, LDAP, or an OAuth2/OIDC provider). In-memory credentials cannot be rotated without recompilation and redeployment.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java</code></div>
+        </div>
+        <div class="finding pass">
+            <div class="finding-header"><span class="badge pass">PASS</span> <strong>Password encoding</strong> <span class="rule-id">auth_003</span></div>
+            <div class="finding-detail">Passwords are hashed using BCryptPasswordEncoder, which is an industry-standard adaptive hashing algorithm with built-in salting. The encoder is defined as a @Bean and used consistently when building UserDetails.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>CSRF protection</strong> <span class="rule-id">auth_004</span></div>
+            <div class="finding-detail">CSRF protection is globally disabled via .csrf().disable() on the main HttpSecurity chain. The application uses HTTP Basic authentication which is session-based by default (Spring Security creates an HttpSession after successful Basic auth), making it susceptible to cross-site request forgery attacks. CSRF is only selectively ignored for /h2-console/** in the first chain segment, but then unconditionally disabled for the rest. If the API is truly stateless, SessionCreationPolicy.STATELESS should be set; otherwise CSRF must remain enabled.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java</code></div>
+        </div>
+        <div class="finding warn">
+            <div class="finding-header"><span class="badge warn">WARN</span> <strong>Authentication scheme</strong> <span class="rule-id">auth_005</span></div>
+            <div class="finding-detail">The application relies on HTTP Basic authentication (.httpBasic()), which transmits credentials (Base64-encoded, not encrypted) with every request. This is acceptable only over HTTPS for simple internal services. For production-facing APIs, token-based authentication (JWT, OAuth2 Bearer tokens) is preferred to avoid credential replay on every call and to support features like token expiry, scopes, and revocation.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java</code></div>
+        </div>
+        <div class="finding pass">
+            <div class="finding-header"><span class="badge pass">PASS</span> <strong>Endpoint authorization rules</strong> <span class="rule-id">auth_006</span></div>
+            <div class="finding-detail">All application endpoints (/**) require the USER role via .antMatchers("/**").hasRole("USER").anyRequest().authenticated(). The controller endpoints /uploadMood, /getMoodDistribution, and /getHappyNearByLocations are therefore protected by authentication and role checks. The rule ordering is correct with more specific matchers (H2 console) before the catch-all.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java</code>, <code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></div>
+        </div>
+        <div class="finding warn">
+            <div class="finding-header"><span class="badge warn">WARN</span> <strong>Session management configuration</strong> <span class="rule-id">auth_007</span></div>
+            <div class="finding-detail">No explicit session management is configured (session fixation protection strategy, concurrent session control, session timeout, or SessionCreationPolicy). Spring Security defaults apply (session fixation protection via changeSessionId, no concurrency limit), but for a REST API these should be explicitly set — ideally to SessionCreationPolicy.STATELESS if sessions are not needed, or with explicit fixation and timeout policies if they are.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java</code></div>
+        </div>
+        <div class="finding warn">
+            <div class="finding-header"><span class="badge warn">WARN</span> <strong>Security response headers</strong> <span class="rule-id">auth_008</span></div>
+            <div class="finding-detail">Only frameOptions().sameOrigin() is explicitly configured (to support the H2 console iframe). No explicit configuration exists for Content-Security-Policy, Strict-Transport-Security (HSTS), X-Content-Type-Options, or Referrer-Policy. Spring Security provides sensible defaults for some of these (X-Content-Type-Options: nosniff, X-Frame-Options: DENY overridden here to SAMEORIGIN), but production deployments should explicitly configure HSTS and CSP.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>H2 console exposure</strong> <span class="rule-id">auth_009</span></div>
+            <div class="finding-detail">The H2 database console is enabled (spring.h2.console.enabled=true) and its path /h2-console/** is explicitly permitAll() with CSRF disabled and frame options relaxed. This exposes a full SQL console without authentication. There is no profile guard to restrict this to development only — if deployed to production, an attacker can access the database directly. The H2 console should be disabled by default and only enabled via a dev/test Spring profile.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java</code>, <code>src/main/resources/application.properties</code></div>
+        </div>
+        <div class="finding warn">
+            <div class="finding-header"><span class="badge warn">WARN</span> <strong>Authenticated user identity extraction</strong> <span class="rule-id">auth_010</span></div>
+            <div class="finding-detail">The controller obtains the current user via request.getRemoteUser(), which works but couples the controller to the Servlet API. Spring Security provides more idiomatic and type-safe alternatives: @AuthenticationPrincipal annotation on a method parameter, or SecurityContextHolder.getContext().getAuthentication(). These approaches enable easier unit testing (via @WithMockUser) and support non-servlet deployments.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>Authentication and authorization testing</strong> <span class="rule-id">auth_011</span></div>
+            <div class="finding-detail">The spring-security-test dependency is declared in pom.xml, but no security-focused tests exist. There are no tests verifying that unauthenticated requests are rejected (HTTP 401), that users without the USER role are forbidden (HTTP 403), or that authenticated users can access protected endpoints. The existing test classes (DemoApplicationTests, MoodServiceImplementationTest) test only context loading and service logic, not security behavior.</div>
+            <div class="files"><code>pom.xml</code>, <code>src/test/java/com/example/moodsense/demo/DemoApplicationTests.java</code>, <code>src/test/java/com/example/moodsense/demo/service/MoodServiceImplementationTest.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>Hardcoded secrets in source code</strong> <span class="rule-id">auth_012</span></div>
+            <div class="finding-detail">Plaintext passwords ('pwd1', 'pwd2') and usernames ('user1', 'user2') are embedded directly in SpringSecurityConfig.java. Even though they are BCrypt-encoded before storage, the raw password strings are visible in source control. Credentials should be externalized to environment variables, Spring Cloud Config, or a secrets manager (e.g., AWS Secrets Manager, HashiCorp Vault) and injected via @Value or configuration properties.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java</code></div>
+        </div>
+        <div class="finding warn">
+            <div class="finding-header"><span class="badge warn">WARN</span> <strong>CORS configuration</strong> <span class="rule-id">auth_013</span></div>
+            <div class="finding-detail">No CORS configuration is defined in the security config or via @CrossOrigin annotations on the controller. If the API is consumed by a browser-based frontend on a different origin, requests will be blocked by the browser's same-origin policy. If CORS is intentionally not needed (server-to-server only), this should be documented; otherwise an explicit CorsConfigurationSource bean should be provided with allowed origins, methods, and headers.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java</code>, <code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>Brute-force / rate-limiting protection</strong> <span class="rule-id">auth_014</span></div>
+            <div class="finding-detail">There is no rate limiting or account lockout mechanism for failed authentication attempts. HTTP Basic auth endpoints are directly exposed, allowing unlimited brute-force password guessing. The application should implement an AuthenticationFailureHandler with account lockout or integrate a rate-limiting filter (e.g., Bucket4j, Spring Cloud Gateway rate limiter) to throttle login attempts.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>HTTPS / transport layer security enforcement</strong> <span class="rule-id">auth_015</span></div>
+            <div class="finding-detail">The security configuration does not enforce HTTPS (no http.requiresChannel().anyRequest().requiresSecure() or server.ssl.* properties). HTTP Basic authentication sends Base64-encoded credentials on every request; without TLS these are trivially interceptable. Production deployments must enforce HTTPS either at the application level or document that TLS termination happens at a reverse proxy / load balancer.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java</code>, <code>src/main/resources/application.properties</code></div>
+        </div></div>
+    </div>
+    <div class="category-card">
+        <div class="category-header">
+            <h3>Validation</h3>
+            <div class="category-stats">
+                <span class="stat pass-stat">1 pass</span>
+                <span class="stat warn-stat">3 warn</span>
+                <span class="stat fail-stat">6 fail</span>
+            </div>
+        </div>
+        <div class="progress-bar-container">
+            <div class="progress-bar" style="width: 10%; background: #ef4444;"></div>
+        </div>
+        <div class="category-score">10%</div>
+        <div class="findings-list">
+        <div class="finding pass">
+            <div class="finding-header"><span class="badge pass">PASS</span> <strong>Validation dependency configuration</strong> <span class="rule-id">val_001</span></div>
+            <div class="finding-detail">The `spring-boot-starter-validation` dependency is declared in `pom.xml`, which brings in Hibernate Validator and the Bean Validation API (javax.validation). The project correctly includes this starter alongside `spring-boot-starter-web`.</div>
+            <div class="files"><code>pom.xml</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>@NotNull on primitive types</strong> <span class="rule-id">val_002</span></div>
+            <div class="finding-detail">In `Mood.java`, `@NotNull` is applied to primitive `int latitude` and `int longitude`. Primitive types can never be `null` in Java, so `@NotNull` will never trigger a validation failure. These fields should use the wrapper type `Integer` for `@NotNull` to have any effect. As declared, invalid input (e.g. missing latitude/longitude) will silently default to `0` instead of being rejected.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/model/Mood.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>Controller @Valid/@Validated on request body/model</strong> <span class="rule-id">val_003</span></div>
+            <div class="finding-detail">The `uploadMood` method in `MoodSenseController` accepts a `Mood` entity as a method parameter but does not annotate it with `@Valid` or `@Validated`. Bean Validation constraints declared on `Mood` (`@NotNull`, `@Min`, `@Max`) are never triggered during request processing. Even though `@Validated` is placed on individual `@RequestParam` parameters, this does not trigger bean validation on those scalar parameters without `@Validated` at the class level and constraint annotations on the parameters themselves.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code>, <code>src/main/java/com/example/moodsense/demo/model/Mood.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>@RequestBody annotation missing on POST endpoint</strong> <span class="rule-id">val_004</span></div>
+            <div class="finding-detail">The `uploadMood` POST endpoint accepts a `Mood` parameter without `@RequestBody`. In a `@RestController`, this causes Spring to treat it as a form-binding parameter rather than deserializing JSON from the request body. For a REST API this is incorrect; without `@RequestBody`, even if `@Valid` were added, JSON payload validation would not work as expected. Additionally, the method separately accepts `moodStatus`, `latitude`, and `longitude` as `@RequestParam` and then manually sets them on the `Mood` object, bypassing any model-level validation entirely.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>Validation error handling</strong> <span class="rule-id">val_005</span></div>
+            <div class="finding-detail">There is no `@ControllerAdvice` or `@ExceptionHandler` to handle `MethodArgumentNotValidException`, `ConstraintViolationException`, or `BindException`. If validation were properly triggered, errors would fall through to Spring Boot's default error handling, returning opaque 400/500 responses without structured, client-friendly error messages or field-level error detail.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>@Validated misuse on @RequestParam</strong> <span class="rule-id">val_006</span></div>
+            <div class="finding-detail">`@Validated` is placed directly on `@RequestParam` parameters (`MoodStatus moodStatus`, `Integer latitude`, `Integer longitude`) in the `uploadMood` method. `@Validated` on individual parameters does not activate constraint validation the way `@Valid` does on `@RequestBody`. For method-level parameter validation to work, `@Validated` must be placed at the class level on the controller, and constraint annotations (e.g. `@Min`, `@Max`, `@NotNull`) must be placed directly on the method parameters. The current usage gives a false sense of validation.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></div>
+        </div>
+        <div class="finding warn">
+            <div class="finding-header"><span class="badge warn">WARN</span> <strong>Enum field validation in MoodStatus</strong> <span class="rule-id">val_007</span></div>
+            <div class="finding-detail">`MoodStatus` enum has `@NotBlank` on its internal `mood` String field. This annotation is never evaluated because the enum constructor always provides a non-blank value, and the field is never subject to bean validation in any context (enums are not validated by the framework). Additionally, the `moodStatus` field in `Mood.java` lacks `@NotNull`, so a null mood status could be persisted. Invalid enum string input at the controller will throw a Spring type-conversion exception rather than a validation error.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/model/MoodStatus.java</code>, <code>src/main/java/com/example/moodsense/demo/model/Mood.java</code>, <code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></div>
+        </div>
+        <div class="finding warn">
+            <div class="finding-header"><span class="badge warn">WARN</span> <strong>Service-layer input validation</strong> <span class="rule-id">val_008</span></div>
+            <div class="finding-detail">The service layer (`MoodServiceImplementation`) performs no defensive input validation. `save(Mood)` passes the entity straight to the repository. `getBestLocationFromCoordinate` will return `null` if the location list is empty, which is then added to the result list in `getLocationsFromCoordinates`, potentially causing `NullPointerException`s downstream. There are no null checks or precondition validations on any service method arguments.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></div>
+        </div>
+        <div class="finding warn">
+            <div class="finding-header"><span class="badge warn">WARN</span> <strong>Constraint message customization</strong> <span class="rule-id">val_009</span></div>
+            <div class="finding-detail">Custom validation messages are provided for `@NotNull`, `@Min`, and `@Max` on `Mood.latitude` and `Mood.longitude` (e.g. "You must enter latitude for Demo purpose"), which is good practice. However, the messages are never surfaced to the client because (a) `@NotNull` on primitive `int` never fires, (b) the `Mood` parameter lacks `@Valid` so constraints are not evaluated, and (c) there is no error-handling mechanism to format and return these messages. The messages are effectively dead code.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/model/Mood.java</code>, <code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>Missing validation on key entity fields</strong> <span class="rule-id">val_010</span></div>
+            <div class="finding-detail">Several important fields lack validation constraints: `Mood.person` has no `@NotBlank` or `@NotNull` (it is set from `request.getRemoteUser()` which could be null in certain configurations); `Mood.moodStatus` has no `@NotNull`; `Location.name` (the `@Id` field) has no `@NotBlank`. The `Location` entity has no validation annotations at all despite being persisted.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/model/Mood.java</code>, <code>src/main/java/com/example/moodsense/demo/model/Location.java</code></div>
+        </div></div>
+    </div>
+    <div class="category-card">
+        <div class="category-header">
+            <h3>Error Handling</h3>
+            <div class="category-stats">
+                <span class="stat pass-stat">0 pass</span>
+                <span class="stat warn-stat">1 warn</span>
+                <span class="stat fail-stat">9 fail</span>
+            </div>
+        </div>
+        <div class="progress-bar-container">
+            <div class="progress-bar" style="width: 0%; background: #ef4444;"></div>
+        </div>
+        <div class="category-score">0%</div>
+        <div class="findings-list">
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>Global exception handler</strong> <span class="rule-id">err_001</span></div>
+            <div class="finding-detail">No @ControllerAdvice or @RestControllerAdvice class exists anywhere in the codebase. No @ExceptionHandler methods are defined in any controller. All exceptions propagate to Spring Boot's default BasicErrorController, which may expose stack traces or internal details depending on configuration. The application.properties does not configure server.error.* properties to restrict error output.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code>, <code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>Consistent error response format</strong> <span class="rule-id">err_002</span></div>
+            <div class="finding-detail">There is no shared error response DTO (e.g., with fields like message, timestamp, path, status, errorCode). API errors are returned in whatever format Spring Boot's default error mechanism produces, which varies depending on Accept headers and configuration. Clients cannot rely on a predictable JSON error shape.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>Null return handling</strong> <span class="rule-id">err_003</span></div>
+            <div class="finding-detail">MoodServiceImplementation.getBestLocationFromCoordinate() initializes result to null and returns null when the locations list from the repository is empty. The caller getLocationsFromCoordinates() adds the return value directly to the result list without null-checking, so the List<Location> returned to the controller can contain null elements. This will cause NullPointerException when the response is serialized or when clients process the list. Additionally, getHappyNearByLocations delegates without null-guarding the intermediate results.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>Void endpoint response</strong> <span class="rule-id">err_004</span></div>
+            <div class="finding-detail">The uploadMood POST endpoint is declared void and does not set an explicit HTTP status on the HttpServletResponse parameter. For a resource-creating POST endpoint, a 201 Created with a location header or at minimum a ResponseEntity with an appropriate status code is expected. Clients receive a default 200 OK with an empty body, providing no confirmation contract for successful creation.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>Custom exception classes</strong> <span class="rule-id">err_005</span></div>
+            <div class="finding-detail">No domain-specific exception classes exist in the codebase (e.g., MoodNotFoundException, InvalidCoordinateException, LocationNotFoundException). Without custom exceptions, business-layer failures cannot be mapped to distinct HTTP status codes or meaningful error messages. All failures surface as generic 500 Internal Server Error responses.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/service/MoodService.java</code>, <code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>Database error handling</strong> <span class="rule-id">err_006</span></div>
+            <div class="finding-detail">MoodRepository extends CrudRepository and all repository calls (save, getMoodDistribution, getAllHappyCoordinates, getAllLocations) flow through MoodServiceImplementation without any try-catch blocks or exception translation. No @Transactional annotations are present on service methods. DataIntegrityViolationException, JpaSystemException, and other persistence exceptions propagate directly to the controller and ultimately to the client as uncontrolled 500 errors with potentially sensitive database details.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code>, <code>src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>Inconsistent ResponseEntity usage</strong> <span class="rule-id">err_007</span></div>
+            <div class="finding-detail">The controller uses mixed return type conventions: uploadMood returns void while getMoodDistribution and getHappyNearByLocations return ResponseEntity<List<...>> with HttpStatus.OK. This inconsistency makes the API contract unpredictable for clients and prevents uniform error/success handling at the controller level.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>Logging of errors and operations</strong> <span class="rule-id">err_008</span></div>
+            <div class="finding-detail">There is no logging framework usage anywhere in the application code. No SLF4J Logger, @Slf4j annotation, or LoggerFactory.getLogger() calls exist in any controller, service, or configuration class. Errors, exceptions, and important business operations are completely silent, making debugging, incident response, and security auditing impossible.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code>, <code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code>, <code>src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java</code></div>
+        </div>
+        <div class="finding fail">
+            <div class="finding-header"><span class="badge fail">FAIL</span> <strong>Input validation error handling</strong> <span class="rule-id">err_009</span></div>
+            <div class="finding-detail">The controller uses @Validated on @RequestParam parameters (moodStatus, latitude, longitude) and the Mood entity has @NotNull, @Min, @Max bean validation annotations, but there is no handler for MethodArgumentNotValidException, ConstraintViolationException, or MethodArgumentTypeMismatchException. When invalid input is provided (e.g., a non-existent MoodStatus enum value or missing parameters), the framework throws exceptions that are not caught or translated into user-friendly 400 Bad Request responses with descriptive messages.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code>, <code>src/main/java/com/example/moodsense/demo/model/Mood.java</code></div>
+        </div>
+        <div class="finding warn">
+            <div class="finding-header"><span class="badge warn">WARN</span> <strong>HTTP 500 exposure on unhandled exceptions</strong> <span class="rule-id">err_010</span></div>
+            <div class="finding-detail">Without a @RestControllerAdvice or any global exception handler, all unhandled exceptions (NullPointerException from null locations, database errors, validation failures) result in Spring Boot's default error handling. The application.properties does not configure server.error.include-stacktrace, server.error.include-message, or server.error.include-binding-errors, so depending on the Spring Boot version defaults, stack traces and internal details could be exposed to clients in error responses. This is both a usability and security concern.</div>
+            <div class="files"><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code>, <code>src/main/resources/application.properties</code></div>
+        </div></div>
+    </div>
+
+  <div class="footer">
+    <p>R-Analysis Report &mdash; MoodSense &mdash; 90 checks across 7 categories</p>
+    <p>Retire &middot; Refactor &middot; Rebuild</p>
+  </div>
+</div>
+</body>
+</html>

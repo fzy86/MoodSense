@@ -1,0 +1,143 @@
+[
+  {
+    "check": "Authentication mechanism (deprecated API)",
+    "result": "warn",
+    "detail": "SpringSecurityConfig extends WebSecurityConfigurerAdapter, which has been deprecated since Spring Security 5.7 (the version pulled in by Spring Boot 2.7.0 used here). The configuration should be migrated to a component-based approach using a SecurityFilterChain @Bean method instead of overriding configure() methods.",
+    "rule_id": "auth_001",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+    ]
+  },
+  {
+    "check": "Credential storage strategy",
+    "result": "fail",
+    "detail": "User credentials are hardcoded in-memory via InMemoryUserDetailsManager with literal usernames ('user1', 'user2') and passwords ('pwd1', 'pwd2') defined directly in the Java source. Production applications must use a persistent, externally managed user store (database-backed UserDetailsService, LDAP, or an OAuth2/OIDC provider). In-memory credentials cannot be rotated without recompilation and redeployment.",
+    "rule_id": "auth_002",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+    ]
+  },
+  {
+    "check": "Password encoding",
+    "result": "pass",
+    "detail": "Passwords are hashed using BCryptPasswordEncoder, which is an industry-standard adaptive hashing algorithm with built-in salting. The encoder is defined as a @Bean and used consistently when building UserDetails.",
+    "rule_id": "auth_003",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+    ]
+  },
+  {
+    "check": "CSRF protection",
+    "result": "fail",
+    "detail": "CSRF protection is globally disabled via .csrf().disable() on the main HttpSecurity chain. The application uses HTTP Basic authentication which is session-based by default (Spring Security creates an HttpSession after successful Basic auth), making it susceptible to cross-site request forgery attacks. CSRF is only selectively ignored for /h2-console/** in the first chain segment, but then unconditionally disabled for the rest. If the API is truly stateless, SessionCreationPolicy.STATELESS should be set; otherwise CSRF must remain enabled.",
+    "rule_id": "auth_004",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+    ]
+  },
+  {
+    "check": "Authentication scheme",
+    "result": "warn",
+    "detail": "The application relies on HTTP Basic authentication (.httpBasic()), which transmits credentials (Base64-encoded, not encrypted) with every request. This is acceptable only over HTTPS for simple internal services. For production-facing APIs, token-based authentication (JWT, OAuth2 Bearer tokens) is preferred to avoid credential replay on every call and to support features like token expiry, scopes, and revocation.",
+    "rule_id": "auth_005",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+    ]
+  },
+  {
+    "check": "Endpoint authorization rules",
+    "result": "pass",
+    "detail": "All application endpoints (/**) require the USER role via .antMatchers(\"/**\").hasRole(\"USER\").anyRequest().authenticated(). The controller endpoints /uploadMood, /getMoodDistribution, and /getHappyNearByLocations are therefore protected by authentication and role checks. The rule ordering is correct with more specific matchers (H2 console) before the catch-all.",
+    "rule_id": "auth_006",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java",
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "check": "Session management configuration",
+    "result": "warn",
+    "detail": "No explicit session management is configured (session fixation protection strategy, concurrent session control, session timeout, or SessionCreationPolicy). Spring Security defaults apply (session fixation protection via changeSessionId, no concurrency limit), but for a REST API these should be explicitly set — ideally to SessionCreationPolicy.STATELESS if sessions are not needed, or with explicit fixation and timeout policies if they are.",
+    "rule_id": "auth_007",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+    ]
+  },
+  {
+    "check": "Security response headers",
+    "result": "warn",
+    "detail": "Only frameOptions().sameOrigin() is explicitly configured (to support the H2 console iframe). No explicit configuration exists for Content-Security-Policy, Strict-Transport-Security (HSTS), X-Content-Type-Options, or Referrer-Policy. Spring Security provides sensible defaults for some of these (X-Content-Type-Options: nosniff, X-Frame-Options: DENY overridden here to SAMEORIGIN), but production deployments should explicitly configure HSTS and CSP.",
+    "rule_id": "auth_008",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+    ]
+  },
+  {
+    "check": "H2 console exposure",
+    "result": "fail",
+    "detail": "The H2 database console is enabled (spring.h2.console.enabled=true) and its path /h2-console/** is explicitly permitAll() with CSRF disabled and frame options relaxed. This exposes a full SQL console without authentication. There is no profile guard to restrict this to development only — if deployed to production, an attacker can access the database directly. The H2 console should be disabled by default and only enabled via a dev/test Spring profile.",
+    "rule_id": "auth_009",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java",
+      "src/main/resources/application.properties"
+    ]
+  },
+  {
+    "check": "Authenticated user identity extraction",
+    "result": "warn",
+    "detail": "The controller obtains the current user via request.getRemoteUser(), which works but couples the controller to the Servlet API. Spring Security provides more idiomatic and type-safe alternatives: @AuthenticationPrincipal annotation on a method parameter, or SecurityContextHolder.getContext().getAuthentication(). These approaches enable easier unit testing (via @WithMockUser) and support non-servlet deployments.",
+    "rule_id": "auth_010",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "check": "Authentication and authorization testing",
+    "result": "fail",
+    "detail": "The spring-security-test dependency is declared in pom.xml, but no security-focused tests exist. There are no tests verifying that unauthenticated requests are rejected (HTTP 401), that users without the USER role are forbidden (HTTP 403), or that authenticated users can access protected endpoints. The existing test classes (DemoApplicationTests, MoodServiceImplementationTest) test only context loading and service logic, not security behavior.",
+    "rule_id": "auth_011",
+    "files": [
+      "pom.xml",
+      "src/test/java/com/example/moodsense/demo/DemoApplicationTests.java",
+      "src/test/java/com/example/moodsense/demo/service/MoodServiceImplementationTest.java"
+    ]
+  },
+  {
+    "check": "Hardcoded secrets in source code",
+    "result": "fail",
+    "detail": "Plaintext passwords ('pwd1', 'pwd2') and usernames ('user1', 'user2') are embedded directly in SpringSecurityConfig.java. Even though they are BCrypt-encoded before storage, the raw password strings are visible in source control. Credentials should be externalized to environment variables, Spring Cloud Config, or a secrets manager (e.g., AWS Secrets Manager, HashiCorp Vault) and injected via @Value or configuration properties.",
+    "rule_id": "auth_012",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+    ]
+  },
+  {
+    "check": "CORS configuration",
+    "result": "warn",
+    "detail": "No CORS configuration is defined in the security config or via @CrossOrigin annotations on the controller. If the API is consumed by a browser-based frontend on a different origin, requests will be blocked by the browser's same-origin policy. If CORS is intentionally not needed (server-to-server only), this should be documented; otherwise an explicit CorsConfigurationSource bean should be provided with allowed origins, methods, and headers.",
+    "rule_id": "auth_013",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java",
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "check": "Brute-force / rate-limiting protection",
+    "result": "fail",
+    "detail": "There is no rate limiting or account lockout mechanism for failed authentication attempts. HTTP Basic auth endpoints are directly exposed, allowing unlimited brute-force password guessing. The application should implement an AuthenticationFailureHandler with account lockout or integrate a rate-limiting filter (e.g., Bucket4j, Spring Cloud Gateway rate limiter) to throttle login attempts.",
+    "rule_id": "auth_014",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+    ]
+  },
+  {
+    "check": "HTTPS / transport layer security enforcement",
+    "result": "fail",
+    "detail": "The security configuration does not enforce HTTPS (no http.requiresChannel().anyRequest().requiresSecure() or server.ssl.* properties). HTTP Basic authentication sends Base64-encoded credentials on every request; without TLS these are trivially interceptable. Production deployments must enforce HTTPS either at the application level or document that TLS termination happens at a reverse proxy / load balancer.",
+    "rule_id": "auth_015",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java",
+      "src/main/resources/application.properties"
+    ]
+  }
+]

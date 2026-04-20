@@ -1,0 +1,97 @@
+[
+  {
+    "check": "Validation dependency configuration",
+    "result": "pass",
+    "detail": "The `spring-boot-starter-validation` dependency is declared in `pom.xml`, which brings in Hibernate Validator and the Bean Validation API (javax.validation). The project correctly includes this starter alongside `spring-boot-starter-web`.",
+    "rule_id": "val_001",
+    "files": [
+      "pom.xml"
+    ]
+  },
+  {
+    "check": "@NotNull on primitive types",
+    "result": "fail",
+    "detail": "In `Mood.java`, `@NotNull` is applied to primitive `int latitude` and `int longitude`. Primitive types can never be `null` in Java, so `@NotNull` will never trigger a validation failure. These fields should use the wrapper type `Integer` for `@NotNull` to have any effect. As declared, invalid input (e.g. missing latitude/longitude) will silently default to `0` instead of being rejected.",
+    "rule_id": "val_002",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/model/Mood.java"
+    ]
+  },
+  {
+    "check": "Controller @Valid/@Validated on request body/model",
+    "result": "fail",
+    "detail": "The `uploadMood` method in `MoodSenseController` accepts a `Mood` entity as a method parameter but does not annotate it with `@Valid` or `@Validated`. Bean Validation constraints declared on `Mood` (`@NotNull`, `@Min`, `@Max`) are never triggered during request processing. Even though `@Validated` is placed on individual `@RequestParam` parameters, this does not trigger bean validation on those scalar parameters without `@Validated` at the class level and constraint annotations on the parameters themselves.",
+    "rule_id": "val_003",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java",
+      "src/main/java/com/example/moodsense/demo/model/Mood.java"
+    ]
+  },
+  {
+    "check": "@RequestBody annotation missing on POST endpoint",
+    "result": "fail",
+    "detail": "The `uploadMood` POST endpoint accepts a `Mood` parameter without `@RequestBody`. In a `@RestController`, this causes Spring to treat it as a form-binding parameter rather than deserializing JSON from the request body. For a REST API this is incorrect; without `@RequestBody`, even if `@Valid` were added, JSON payload validation would not work as expected. Additionally, the method separately accepts `moodStatus`, `latitude`, and `longitude` as `@RequestParam` and then manually sets them on the `Mood` object, bypassing any model-level validation entirely.",
+    "rule_id": "val_004",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "check": "Validation error handling",
+    "result": "fail",
+    "detail": "There is no `@ControllerAdvice` or `@ExceptionHandler` to handle `MethodArgumentNotValidException`, `ConstraintViolationException`, or `BindException`. If validation were properly triggered, errors would fall through to Spring Boot's default error handling, returning opaque 400/500 responses without structured, client-friendly error messages or field-level error detail.",
+    "rule_id": "val_005",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "check": "@Validated misuse on @RequestParam",
+    "result": "fail",
+    "detail": "`@Validated` is placed directly on `@RequestParam` parameters (`MoodStatus moodStatus`, `Integer latitude`, `Integer longitude`) in the `uploadMood` method. `@Validated` on individual parameters does not activate constraint validation the way `@Valid` does on `@RequestBody`. For method-level parameter validation to work, `@Validated` must be placed at the class level on the controller, and constraint annotations (e.g. `@Min`, `@Max`, `@NotNull`) must be placed directly on the method parameters. The current usage gives a false sense of validation.",
+    "rule_id": "val_006",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "check": "Enum field validation in MoodStatus",
+    "result": "warn",
+    "detail": "`MoodStatus` enum has `@NotBlank` on its internal `mood` String field. This annotation is never evaluated because the enum constructor always provides a non-blank value, and the field is never subject to bean validation in any context (enums are not validated by the framework). Additionally, the `moodStatus` field in `Mood.java` lacks `@NotNull`, so a null mood status could be persisted. Invalid enum string input at the controller will throw a Spring type-conversion exception rather than a validation error.",
+    "rule_id": "val_007",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/model/MoodStatus.java",
+      "src/main/java/com/example/moodsense/demo/model/Mood.java",
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "check": "Service-layer input validation",
+    "result": "warn",
+    "detail": "The service layer (`MoodServiceImplementation`) performs no defensive input validation. `save(Mood)` passes the entity straight to the repository. `getBestLocationFromCoordinate` will return `null` if the location list is empty, which is then added to the result list in `getLocationsFromCoordinates`, potentially causing `NullPointerException`s downstream. There are no null checks or precondition validations on any service method arguments.",
+    "rule_id": "val_008",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java"
+    ]
+  },
+  {
+    "check": "Constraint message customization",
+    "result": "warn",
+    "detail": "Custom validation messages are provided for `@NotNull`, `@Min`, and `@Max` on `Mood.latitude` and `Mood.longitude` (e.g. \"You must enter latitude for Demo purpose\"), which is good practice. However, the messages are never surfaced to the client because (a) `@NotNull` on primitive `int` never fires, (b) the `Mood` parameter lacks `@Valid` so constraints are not evaluated, and (c) there is no error-handling mechanism to format and return these messages. The messages are effectively dead code.",
+    "rule_id": "val_009",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/model/Mood.java",
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "check": "Missing validation on key entity fields",
+    "result": "fail",
+    "detail": "Several important fields lack validation constraints: `Mood.person` has no `@NotBlank` or `@NotNull` (it is set from `request.getRemoteUser()` which could be null in certain configurations); `Mood.moodStatus` has no `@NotNull`; `Location.name` (the `@Id` field) has no `@NotBlank`. The `Location` entity has no validation annotations at all despite being persisted.",
+    "rule_id": "val_010",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/model/Mood.java",
+      "src/main/java/com/example/moodsense/demo/model/Location.java"
+    ]
+  }
+]

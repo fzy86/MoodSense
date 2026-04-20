@@ -2,7 +2,7 @@
   {
     "check": "Package naming convention",
     "result": "fail",
-    "detail": "The persistence package is named `repositary` instead of the standard `repository`, which breaks Java naming expectations and will confuse maintainers and tooling.",
+    "detail": "The persistence layer package is named `repositary` (misspelled) instead of the standard `repository`. This typo propagates into import statements in MoodServiceImplementation and MoodServiceImplementationTest, breaking Java naming expectations and confusing maintainers and tooling alike.",
     "rule_id": "dom_001",
     "files": [
       "src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java",
@@ -13,7 +13,7 @@
   {
     "check": "Separation of concerns",
     "result": "pass",
-    "detail": "The codebase uses distinct packages for controller, service, persistence, and model types, and the controller delegates to `MoodService` rather than calling the repository directly.",
+    "detail": "The codebase uses distinct packages for controller, service, persistence (repositary), model, and config. The controller delegates exclusively to the MoodService interface and never calls the repository directly, maintaining proper layering.",
     "rule_id": "dom_002",
     "files": [
       "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java",
@@ -24,18 +24,19 @@
   {
     "check": "Domain model richness",
     "result": "warn",
-    "detail": "Entities and enums are Lombok `@Data` data carriers with almost no behavior; business rules (distance to nearest happy location, grouping) live in the service and repository projections, which fits an anemic domain style rather than a rich domain model.",
+    "detail": "Domain entities (Mood, Location) and the MoodStatus enum are pure data carriers generated via Lombok @Data with no domain behavior. Business rules such as distance calculation and mood grouping live entirely in MoodServiceImplementation and repository query projections, following an anemic domain model anti-pattern rather than a rich domain model.",
     "rule_id": "dom_003",
     "files": [
       "src/main/java/com/example/moodsense/demo/model/Mood.java",
       "src/main/java/com/example/moodsense/demo/model/Location.java",
+      "src/main/java/com/example/moodsense/demo/model/MoodStatus.java",
       "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java"
     ]
   },
   {
     "check": "Entity design",
     "result": "fail",
-    "detail": "JPA entities lack audit fields (`createdAt` / `updatedAt`). `Mood` uses primitive `int` for `@GeneratedValue` id while `MoodRepository` extends `CrudRepository<Mood, String>`, so the declared ID type does not match the entity. Lombok `@Data` on `@Entity` types is risky for `equals`/`hashCode` (typically should exclude the id or follow a JPA-safe pattern).",
+    "detail": "Multiple entity design issues: (1) Neither Mood nor Location has audit fields (createdAt/updatedAt). (2) Mood declares its @Id as primitive `int` with @GeneratedValue, but MoodRepository extends CrudRepository<Mood, String> — the generic ID type (String) does not match the entity's actual ID type (int), which will cause runtime type-mismatch errors on certain CrudRepository operations. (3) Lombok @Data on @Entity classes generates equals/hashCode based on all fields including the mutable auto-generated id, which is unsafe for JPA managed entities in collections and detached/managed state comparisons.",
     "rule_id": "dom_004",
     "files": [
       "src/main/java/com/example/moodsense/demo/model/Mood.java",
@@ -44,19 +45,20 @@
     ]
   },
   {
-    "check": "Value objects",
+    "check": "Value objects and projections",
     "result": "warn",
-    "detail": "`Coordinate` is a Spring Data projection interface (getters only), not an explicit immutable value object (for example a `record` or small final class with validation). It works for query mapping but does not embody a dedicated value-object boundary in the domain.",
+    "detail": "Coordinate and MoodDistribution are plain interfaces used as Spring Data JPA query projections. While they work for mapping query results, they are not explicit immutable value objects (e.g., Java records or final classes with validation). The domain does not define a formal value-object boundary for concepts like geographic coordinates or mood statistics.",
     "rule_id": "dom_005",
     "files": [
       "src/main/java/com/example/moodsense/demo/model/Coordinate.java",
+      "src/main/java/com/example/moodsense/demo/model/MoodDistribution.java",
       "src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java"
     ]
   },
   {
     "check": "DTO separation",
     "result": "fail",
-    "detail": "The REST controller accepts and mutates the `Mood` JPA entity directly (`uploadMood(..., Mood mood, ...)`), coupling the HTTP API to the persistence model instead of using request/response DTOs.",
+    "detail": "The REST controller's uploadMood endpoint accepts the Mood JPA entity directly as a method parameter and mutates it in-place (setting person, latitude, longitude, moodStatus) before persisting. No request or response DTOs exist, coupling the HTTP API schema tightly to the persistence model and exposing internal entity structure to clients.",
     "rule_id": "dom_006",
     "files": [
       "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java",
@@ -64,38 +66,40 @@
     ]
   },
   {
-    "check": "Interface-driven design",
+    "check": "Interface-driven service design",
     "result": "pass",
-    "detail": "`MoodService` is a dedicated interface with a Spring `@Service` implementation registered as `moodService`, which satisfies interface-driven service design.",
+    "detail": "MoodService is defined as a dedicated interface and MoodServiceImplementation is its concrete @Service implementation. The controller depends on the MoodService interface, enabling proper dependency inversion and testability.",
     "rule_id": "dom_007",
     "files": [
       "src/main/java/com/example/moodsense/demo/service/MoodService.java",
-      "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java"
-    ]
-  },
-  {
-    "check": "Naming conventions",
-    "result": "warn",
-    "detail": "Most names follow Java conventions; minor issues include `getHappyNearByLocations` (awkward `NearBy` segment in camelCase) and the verbose `MoodServiceImplementation` name. The misspelled package name is covered under package naming.",
-    "rule_id": "dom_008",
-    "files": [
-      "src/main/java/com/example/moodsense/demo/service/MoodService.java",
+      "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java",
       "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
     ]
   },
   {
-    "check": "Single Responsibility",
+    "check": "Class and method naming conventions",
     "result": "warn",
-    "detail": "`MoodServiceImplementation` both delegates persistence and implements location resolution and Euclidean distance logic (`getBestLocationFromCoordinate`), mixing application orchestration with spatial matching concerns that could live in a dedicated component.",
+    "detail": "Most names follow Java conventions, but several are suboptimal: (1) `getHappyNearByLocations` uses awkward camelCase for 'NearBy' — `getHappyNearbyLocations` would be more natural. (2) `MoodServiceImplementation` is verbose; the conventional suffix is `Impl` (e.g., `MoodServiceImpl`). (3) The misspelled `repositary` package is covered separately under dom_001.",
+    "rule_id": "dom_008",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/service/MoodService.java",
+      "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java",
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "check": "Single Responsibility Principle",
+    "result": "warn",
+    "detail": "MoodServiceImplementation mixes application-layer orchestration (delegating save and query calls to the repository) with spatial matching logic (Euclidean distance computation in getBestLocationFromCoordinate and coordinate-to-location mapping in getLocationsFromCoordinates). The distance/location resolution concern could be extracted into a dedicated component or utility to improve cohesion.",
     "rule_id": "dom_009",
     "files": [
       "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java"
     ]
   },
   {
-    "check": "Application entry point",
+    "check": "Application entry point naming",
     "result": "fail",
-    "detail": "The Spring Boot main class is named `DemoApplication` rather than something aligned with the product (for example `MoodSenseApplication`), which obscures the real application identity in logs and documentation.",
+    "detail": "The Spring Boot main class is named `DemoApplication` — a generic placeholder that does not reflect the product identity. A domain-aligned name such as `MoodSenseApplication` would improve clarity in logs, deployment artifacts, and documentation.",
     "rule_id": "dom_010",
     "files": [
       "src/main/java/com/example/moodsense/demo/DemoApplication.java"

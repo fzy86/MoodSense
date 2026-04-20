@@ -1,0 +1,171 @@
+[
+  {
+    "check": "RESTful URI naming conventions",
+    "result": "fail",
+    "detail": "All three endpoint URIs use verbs and camelCase: /uploadMood, /getMoodDistribution, /getHappyNearByLocations. REST best practice requires noun-based, lowercase, hyphen-separated resource paths (e.g., /moods, /mood-distributions, /locations/happy-nearby). The current naming makes the API look like an RPC interface rather than a resource-oriented REST API.",
+    "rule_id": "api_001",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "check": "HTTP method semantics and status codes",
+    "result": "fail",
+    "detail": "The uploadMood POST endpoint returns void, which results in a default 200 OK. For a resource-creating operation, the endpoint should return 201 Created (ideally with a Location header pointing to the new resource and the created entity in the body). The GET endpoints correctly return 200 OK.",
+    "rule_id": "api_002",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "check": "API versioning strategy",
+    "result": "fail",
+    "detail": "There is no API versioning mechanism in place. The controller class has no class-level @RequestMapping with a versioned base path (e.g., /api/v1), and no header-based or media-type-based versioning is configured. Without versioning, breaking changes cannot be introduced safely for existing clients.",
+    "rule_id": "api_003",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "check": "Use of @GetMapping/@PostMapping shortcut annotations",
+    "result": "warn",
+    "detail": "All endpoints use the verbose @RequestMapping(value = \"...\", method = RequestMethod.XXX) form instead of the more concise and idiomatic @GetMapping and @PostMapping annotations available since Spring 4.3. While functionally equivalent, the shorthand annotations improve readability and are the recommended practice.",
+    "rule_id": "api_004",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "check": "Request body handling for POST",
+    "result": "fail",
+    "detail": "The uploadMood POST endpoint accepts data via individual @RequestParam parameters and an unbound Mood form object instead of using @RequestBody with a JSON request DTO. REST APIs should accept structured JSON bodies for resource creation, enabling proper content negotiation and deserialization. The current approach is form-parameter-style rather than RESTful JSON.",
+    "rule_id": "api_005",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "check": "Input validation on request body",
+    "result": "fail",
+    "detail": "The Mood model has @NotNull, @Min, and @Max validation annotations, but the controller never triggers bean validation on the Mood object because @Valid or @Validated is not placed on the Mood parameter itself. @Validated is only applied to individual @RequestParam parameters (moodStatus, latitude, longitude). The latitude and longitude are set manually on the Mood object after binding, bypassing the entity-level constraints entirely.",
+    "rule_id": "api_006",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java",
+      "src/main/java/com/example/moodsense/demo/model/Mood.java"
+    ]
+  },
+  {
+    "check": "Content type declarations (produces/consumes)",
+    "result": "warn",
+    "detail": "None of the @RequestMapping annotations declare explicit 'produces' or 'consumes' media types (e.g., MediaType.APPLICATION_JSON_VALUE). While Spring Boot defaults to JSON via Jackson on the classpath, explicit declarations improve API clarity, enable strict content negotiation, and make the contract self-documenting.",
+    "rule_id": "api_007",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "check": "Consistent ResponseEntity usage",
+    "result": "fail",
+    "detail": "uploadMood returns void while getMoodDistribution and getHappyNearByLocations return ResponseEntity<List<...>>. Mixing return types across endpoints in the same controller creates an inconsistent API contract. All endpoints should use ResponseEntity (or a consistent wrapper) so clients receive predictable response structures and status codes.",
+    "rule_id": "api_008",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "check": "Pagination support for collection endpoints",
+    "result": "fail",
+    "detail": "getMoodDistribution and getHappyNearByLocations both return raw List<> without any pagination support (no Pageable parameter, no Page/Slice wrapper, no limit/offset query params). For production APIs, unbounded collection responses can cause performance issues and excessive memory use as data grows.",
+    "rule_id": "api_009",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java",
+      "src/main/java/com/example/moodsense/demo/service/MoodService.java"
+    ]
+  },
+  {
+    "check": "DTO separation from domain entities",
+    "result": "fail",
+    "detail": "The controller directly exposes JPA entities (Mood, Location) and projection interfaces (MoodDistribution) as API request/response types. There are no dedicated DTOs or API resource representations. Exposing entities couples the API contract to the persistence schema, risks leaking internal fields (e.g., database IDs), and makes independent evolution of the API and data model difficult.",
+    "rule_id": "api_010",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java",
+      "src/main/java/com/example/moodsense/demo/model/Mood.java",
+      "src/main/java/com/example/moodsense/demo/model/Location.java",
+      "src/main/java/com/example/moodsense/demo/model/MoodDistribution.java"
+    ]
+  },
+  {
+    "check": "API documentation (OpenAPI/Swagger)",
+    "result": "fail",
+    "detail": "There are no OpenAPI/Swagger annotations (@Operation, @ApiResponse, @Schema, etc.) on the controller or model classes, and no springdoc-openapi or springfox dependency in pom.xml. The API is entirely undocumented, making it difficult for consumers to discover endpoints, understand request/response schemas, or integrate without reading source code.",
+    "rule_id": "api_011",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java",
+      "pom.xml"
+    ]
+  },
+  {
+    "check": "Controller base path",
+    "result": "warn",
+    "detail": "The controller class has no class-level @RequestMapping to define a shared base path (e.g., /api/moods). Each endpoint defines its full path individually. A common base path groups related endpoints, reduces duplication, and enables cleaner reverse-proxy or gateway routing.",
+    "rule_id": "api_012",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "check": "Use of HttpServletRequest/HttpServletResponse in controller",
+    "result": "warn",
+    "detail": "uploadMood accepts both HttpServletRequest and HttpServletResponse as parameters, and the GET endpoints accept HttpServletRequest. Directly depending on Servlet API objects couples the controller to the Servlet container and reduces testability. User identity should be injected via @AuthenticationPrincipal or Principal, and response status should be set via ResponseEntity or @ResponseStatus.",
+    "rule_id": "api_013",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "check": "CORS configuration",
+    "result": "warn",
+    "detail": "There is no @CrossOrigin annotation on the controller and no WebMvcConfigurer bean defining CORS mappings. If the API is consumed by browser-based clients from different origins, requests will be blocked. For a backend-only API this may be intentional, but it should be explicitly configured.",
+    "rule_id": "api_014",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java",
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "check": "REST resource CRUD completeness",
+    "result": "warn",
+    "detail": "The API only supports creating a mood (POST) and reading aggregated data (GET mood distribution, GET happy locations). There are no endpoints for retrieving a single mood by ID, updating a mood (PUT/PATCH), or deleting a mood (DELETE). The API surface is incomplete for full resource lifecycle management of the Mood entity.",
+    "rule_id": "api_015",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "check": "Idempotency and safe method semantics",
+    "result": "pass",
+    "detail": "The two GET endpoints (getMoodDistribution, getHappyNearByLocations) are safe and idempotent—they only read data. The POST endpoint (uploadMood) creates a new resource, which is appropriately non-idempotent. HTTP method semantics are correctly aligned with the operations performed.",
+    "rule_id": "api_016",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "check": "Response body for write operations",
+    "result": "fail",
+    "detail": "The uploadMood POST endpoint returns void, providing no response body to the client. Best practice for resource-creating endpoints is to return the created resource (or at minimum its ID and a Location header) so clients can confirm what was persisted without making a follow-up request.",
+    "rule_id": "api_017",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "check": "Path variable usage for resource identification",
+    "result": "warn",
+    "detail": "No endpoints use @PathVariable for resource identification (e.g., /moods/{id}). The user identity is extracted from HttpServletRequest.getRemoteUser() for all operations. While authentication-based scoping is valid, standard REST design expects path variables for identifying specific resources.",
+    "rule_id": "api_018",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  }
+]
