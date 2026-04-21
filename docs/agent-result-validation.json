@@ -1,0 +1,72 @@
+[
+  {
+    "rule_id": "val_001",
+    "check": "Bean validation usage (@Valid/@Validated on controller parameters)",
+    "result": "fail",
+    "detail": "The uploadMood endpoint accepts a Mood object as a method parameter (bound as a model attribute) that carries bean-validation annotations (@NotNull, @Min, @Max), yet neither @Valid nor @Validated is applied to that parameter. This means the constraint annotations on the Mood entity are never evaluated by the framework during request handling. Additionally, @Validated is placed on the @RequestParam parameters (MoodStatus, Integer latitude, Integer longitude), but @Validated/@Valid on simple @RequestParam types does not trigger JSR-380 bean validation — Spring already performs type conversion and required-checks for @RequestParam, making the annotation redundant there. The Mood parameter is the only bean that would benefit from @Valid/@Validated, and it is missing entirely.",
+    "files": ["src/main/java/com/moodsense/controller/MoodSenseController.java"]
+  },
+  {
+    "rule_id": "val_002",
+    "check": "Entity constraint annotations completeness",
+    "result": "warn",
+    "detail": "The Mood entity defines @NotNull, @Min, and @Max on latitude and longitude, which is a reasonable start, but coverage is incomplete. The 'person' field has no constraints at all — no @NotBlank, no @Size limit — so an empty or arbitrarily long string could be persisted. The 'moodStatus' field lacks @NotNull, meaning a null enum value could be saved to the database. The Location entity (name, latitude, longitude) is mentioned with no validation annotations whatsoever. The MoodStatus enum places @NotBlank on its private 'mood' field, but this is never validated and is semantically meaningless — enum constants are compile-time fixed values, not user-supplied input subject to bean validation.",
+    "files": ["src/main/java/com/moodsense/model/Mood.java", "src/main/java/com/moodsense/model/MoodStatus.java", "src/main/java/com/moodsense/model/Location.java"]
+  },
+  {
+    "rule_id": "val_003",
+    "check": "Service layer validation",
+    "result": "fail",
+    "detail": "MoodServiceImplementation.save() directly delegates to moodRepository.save(mood) with no validation logic. The service class is not annotated with @Validated, and the save() method parameter is not annotated with @Valid, so even if the controller somehow passed an invalid Mood object, the service layer would persist it without question. Best practice for defense-in-depth is to annotate the service class with @Validated and individual method parameters with @Valid so that constraints are re-checked at the service boundary. The other service methods (getMoodDistribution, getHappyNearByLocations) also perform no validation on their input parameters (e.g., the user string from getRemoteUser).",
+    "files": ["src/main/java/com/moodsense/service/MoodServiceImplementation.java"]
+  },
+  {
+    "rule_id": "val_004",
+    "check": "Input sanitization (XSS, SQL injection)",
+    "result": "warn",
+    "detail": "There is no explicit input sanitization anywhere in the codebase. The 'person' field is populated from request.getRemoteUser(), which is container-managed and generally safe, but string values such as mood-related text could carry XSS payloads if the data is ever rendered in a web view. No HTML-encoding, no sanitization library (e.g., OWASP Java HTML Sanitizer), and no @SafeHtml or equivalent constraint is applied. SQL injection risk is partially mitigated by the use of Spring Data JPA (which uses parameterized queries under the hood), but if any custom @Query with string concatenation were added later, there would be no guard rails. The controller method returns void for uploadMood and raw entity lists for GET endpoints, so reflected XSS through JSON responses is lower risk but stored XSS remains a concern if data is displayed in any front-end.",
+    "files": ["src/main/java/com/moodsense/controller/MoodSenseController.java", "src/main/java/com/moodsense/model/Mood.java"]
+  },
+  {
+    "rule_id": "val_005",
+    "check": "Enum validation handling",
+    "result": "fail",
+    "detail": "MoodStatus is accepted as a @RequestParam in the uploadMood endpoint. When a client supplies an invalid enum string (e.g., 'ANGRY'), Spring's type conversion fails and throws a MethodArgumentTypeMismatchException (wrapping an IllegalArgumentException). There is no @ExceptionHandler or @ControllerAdvice to catch this exception, so the application returns a default 400 or 500 error with a stack trace or generic Whitelabel error page, leaking implementation details. A proper approach would be to add a @ControllerAdvice that catches MethodArgumentTypeMismatchException and returns a structured, user-friendly error response listing the valid enum values. The @NotBlank annotation on the private 'mood' field inside the MoodStatus enum is a misunderstanding of bean validation — enum instances are not validated this way.",
+    "files": ["src/main/java/com/moodsense/model/MoodStatus.java", "src/main/java/com/moodsense/controller/MoodSenseController.java"]
+  },
+  {
+    "rule_id": "val_006",
+    "check": "@NotNull on primitive types (int vs Integer)",
+    "result": "fail",
+    "detail": "The Mood entity declares 'latitude' and 'longitude' as primitive 'int' fields, then annotates them with @NotNull. This is a well-known anti-pattern: Java primitive types cannot be null — they default to 0 — so the @NotNull constraint will never fail. If a client omits latitude or longitude, the fields silently default to 0, bypassing the intended 'must provide a value' validation. The correct fix is to change the field types to 'Integer' (the wrapper type), which can be null, allowing @NotNull to function as intended. Similarly, the 'id' field is declared as 'int' rather than 'Integer', although since it is @GeneratedValue this is less critical. The @Min and @Max constraints do still work on primitives, but the @NotNull is effectively dead code.",
+    "files": ["src/main/java/com/moodsense/model/Mood.java"]
+  },
+  {
+    "rule_id": "val_007",
+    "check": "Validation error response handling",
+    "result": "fail",
+    "detail": "There is no structured error response handling anywhere in the application. The uploadMood method returns void and does not accept a BindingResult parameter, so even if @Valid were added to the Mood parameter, a validation failure would throw a MethodArgumentNotValidException that is unhandled by the application. No @ControllerAdvice or @ExceptionHandler methods exist to translate validation errors into user-friendly JSON responses with field-level error messages. The GET endpoints also lack error handling. Without a BindingResult or global exception handler, clients receive Spring Boot's default error responses (Whitelabel error page or generic JSON), which may expose internal details and provide no actionable feedback. Best practice is to implement a @ControllerAdvice that catches MethodArgumentNotValidException, ConstraintViolationException, and MethodArgumentTypeMismatchException, returning a standardized error DTO.",
+    "files": ["src/main/java/com/moodsense/controller/MoodSenseController.java"]
+  },
+  {
+    "rule_id": "val_008",
+    "check": "Custom validators",
+    "result": "warn",
+    "detail": "No custom validators (implementations of ConstraintValidator) are defined in the project. While the current validation requirements are simple enough to be covered by standard annotations, several areas would benefit from custom validators: (1) A @ValidCoordinateRange class-level annotation could encapsulate the latitude/longitude range checks and be reused across Mood and Location entities. (2) A custom validator could verify that the coordinate pair represents a meaningful geographic location rather than just checking each axis independently. (3) The MoodStatus enum handling could benefit from a custom @ValidEnum annotation that provides a clear error message listing valid values. The absence of custom validators is not a critical deficiency for this small application but indicates the validation strategy has not been thoughtfully designed for maintainability.",
+    "files": ["src/main/java/com/moodsense/model/Mood.java"]
+  },
+  {
+    "rule_id": "val_009",
+    "check": "@Validated vs @Valid usage",
+    "result": "fail",
+    "detail": "@Validated and @Valid are used incorrectly in this application. In the uploadMood method, @Validated is placed on @RequestParam parameters (MoodStatus moodStatus, Integer latitude, Integer longitude). For simple scalar @RequestParam types, this annotation does not trigger JSR-380 bean validation — Spring handles @RequestParam binding and type conversion separately. Meanwhile, the Mood parameter — which is the actual bean carrying constraint annotations — has neither @Valid nor @Validated. The correct approach is: (1) Add @Valid or @Validated to the Mood parameter to trigger validation of its @NotNull/@Min/@Max constraints. (2) If method-level validation of @RequestParam is desired, place @Validated on the controller class (not individual parameters) and use constraint annotations like @Min/@Max directly on the parameters. (3) Remove the misleading @Validated from the @RequestParam parameters, as it gives a false sense of security.",
+    "files": ["src/main/java/com/moodsense/controller/MoodSenseController.java"]
+  },
+  {
+    "rule_id": "val_010",
+    "check": "Cross-field validation",
+    "result": "warn",
+    "detail": "No cross-field validation exists in the application. Latitude and longitude are validated independently with their own @Min/@Max constraints, but there is no class-level constraint that validates them together (e.g., ensuring a coordinate pair falls within a valid geographic region, or that certain mood statuses are only valid in certain locations). The Mood entity does not use any class-level custom constraint annotation (e.g., @Constraint with a class-level validator). For the current scope of the application — a simple mood tracker with demo-range coordinates — cross-field validation is not strictly required, but it represents a missed opportunity: for instance, verifying that (latitude, longitude) pairs represent valid locations, or that the combination of person + timestamp + location is unique, would improve data integrity.",
+    "files": ["src/main/java/com/moodsense/model/Mood.java"]
+  }
+]
