@@ -1,0 +1,232 @@
+{
+  "generated": "2026-04-21",
+  "project": "Mood Sense Demo",
+  "app_folder": "/workspace",
+  "backend": "Java/Spring Boot",
+  "reference_summary": "Spring Boot backend (7 categories)",
+  "scores": {
+    "api_design": {"score": 0, "max": 2},
+    "domain_structure": {"score": 1, "max": 2},
+    "business_logic": {"score": 0, "max": 2},
+    "data_access": {"score": 1, "max": 2},
+    "authentication": {"score": 1, "max": 3},
+    "validation": {"score": 1, "max": 2},
+    "error_handling": {"score": 0, "max": 2},
+    "total": 4,
+    "max": 15,
+    "overall_pct": 27,
+    "band": "Needs Work"
+  },
+  "stack_detected": {"report_profile": "springboot"},
+  "coverage": {
+    "framework_detected": "Spring Boot 2.7.0, Java 11, spring-boot-starter-web, security, data-jpa, validation, H2",
+    "source_files": 11,
+    "notes": "Maven single-module app; controllers, services, JPA repository, entities under com.example.moodsense.demo"
+  },
+  "categories": {
+    "api_design": [
+      {
+        "check": "POST uploadMood returns void without explicit HTTP semantics",
+        "result": "warn",
+        "detail": "uploadMood is void and does not return ResponseEntity or 201 Created; clients lack a consistent JSON envelope or problem details for errors.",
+        "rule_id": "API-SEM-001",
+        "files": ["src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"]
+      },
+      {
+        "check": "CrudRepository ID type does not match Mood primary key",
+        "result": "fail",
+        "detail": "MoodRepository extends CrudRepository<Mood, String> but Mood uses int @GeneratedValue id; ID typing is inconsistent and error-prone for callers.",
+        "rule_id": "API-MODEL-001",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java",
+          "src/main/java/com/example/moodsense/demo/model/Mood.java"
+        ]
+      }
+    ],
+    "domain_structure": [
+      {
+        "check": "Conventional Spring layering",
+        "result": "pass",
+        "detail": "Packages split into controller, service, repository (spelled repositary), model, and config; responsibilities mostly aligned with layers.",
+        "rule_id": "DOM-LAY-001",
+        "files": ["src/main/java/com/example/moodsense/demo"]
+      },
+      {
+        "check": "Naming consistency",
+        "result": "warn",
+        "detail": "Package name typo repositary reduces clarity versus standard repository spelling.",
+        "rule_id": "DOM-NAM-001",
+        "files": ["src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java"]
+      }
+    ],
+    "business_logic": [
+      {
+        "check": "Nearest happy location distance calculation",
+        "result": "fail",
+        "detail": "getBestLocationFromCoordinate uses location.getLatitude() - coordinate.getLongitude() for the second squared term instead of differencing longitudes; nearby matching is mathematically wrong.",
+        "rule_id": "BL-GEO-001",
+        "files": ["src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java"]
+      },
+      {
+        "check": "Scalability of nearest-location search",
+        "result": "warn",
+        "detail": "For each happy coordinate the code loads all Location rows and scans linearly; no spatial index or bounded query.",
+        "rule_id": "BL-PERF-001",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java",
+          "src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java"
+        ]
+      }
+    ],
+    "data_access": [
+      {
+        "check": "User-scoped queries use parameters",
+        "result": "pass",
+        "detail": "JPQL uses :remoteUser @Param for mood distribution and happy coordinates, reducing injection risk and enforcing per-user filtering.",
+        "rule_id": "DA-SEC-001",
+        "files": ["src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java"]
+      },
+      {
+        "check": "Embedded H2 and console",
+        "result": "warn",
+        "detail": "application.properties enables H2 in-memory database and h2-console; fine for demo but not production persistence or ops posture.",
+        "rule_id": "DA-DEP-001",
+        "files": ["src/main/resources/application.properties"]
+      }
+    ],
+    "authentication": [
+      {
+        "check": "In-memory users with hardcoded credentials",
+        "result": "fail",
+        "detail": "SpringSecurityConfig defines user1/pwd1 and user2/pwd2 in source; no external IdP, rotation, or secret management.",
+        "rule_id": "AUTH-CRED-001",
+        "files": ["src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"]
+      },
+      {
+        "check": "CSRF disabled globally",
+        "result": "warn",
+        "detail": "httpBasic().and().csrf().disable() disables CSRF for all endpoints; mitigated somewhat by stateless Basic auth but still a broad relaxation.",
+        "rule_id": "AUTH-CSRF-001",
+        "files": ["src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"]
+      },
+      {
+        "check": "Principal propagation",
+        "result": "pass",
+        "detail": "Controller uses request.getRemoteUser() when saving and querying moods so data is tied to authenticated user.",
+        "rule_id": "AUTH-CTX-001",
+        "files": ["src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"]
+      }
+    ],
+    "validation": [
+      {
+        "check": "Coordinate constraints on Mood entity",
+        "result": "pass",
+        "detail": "latitude and longitude use @NotNull @Min @Max with clear messages for demo bounds.",
+        "rule_id": "VAL-FLD-001",
+        "files": ["src/main/java/com/example/moodsense/demo/model/Mood.java"]
+      },
+      {
+        "check": "uploadMood binding and validation coverage",
+        "result": "warn",
+        "detail": "Mood is not annotated with @RequestBody or validated with @Valid; servlet parameter binding may not run full Bean Validation on Mood while query params use @Validated.",
+        "rule_id": "VAL-CTL-001",
+        "files": ["src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"]
+      }
+    ],
+    "error_handling": [
+      {
+        "check": "Centralized API error handling",
+        "result": "warn",
+        "detail": "No @ControllerAdvice or RFC7807-style problem responses; clients get default Spring error shapes and inconsistent behavior on validation failures.",
+        "rule_id": "ERR-GLOB-001",
+        "files": ["src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"]
+      },
+      {
+        "check": "uploadMood response contract",
+        "result": "warn",
+        "detail": "void controller method gives no explicit success payload or location header; harder for API consumers to handle outcomes uniformly.",
+        "rule_id": "ERR-API-001",
+        "files": ["src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"]
+      }
+    ]
+  },
+  "gaps": [
+    {
+      "severity": "fail",
+      "category": "API Design",
+      "check": "CrudRepository ID type does not match Mood primary key",
+      "detail": "MoodRepository extends CrudRepository<Mood, String> but Mood uses int @GeneratedValue id; ID typing is inconsistent and error-prone for callers.",
+      "rule_id": "API-MODEL-001"
+    },
+    {
+      "severity": "fail",
+      "category": "Business Logic",
+      "check": "Nearest happy location distance calculation",
+      "detail": "getBestLocationFromCoordinate uses location.getLatitude() - coordinate.getLongitude() for the second squared term instead of differencing longitudes; nearby matching is mathematically wrong.",
+      "rule_id": "BL-GEO-001"
+    },
+    {
+      "severity": "fail",
+      "category": "Authentication",
+      "check": "In-memory users with hardcoded credentials",
+      "detail": "SpringSecurityConfig defines user1/pwd1 and user2/pwd2 in source; no external IdP, rotation, or secret management.",
+      "rule_id": "AUTH-CRED-001"
+    },
+    {
+      "severity": "warn",
+      "category": "API Design",
+      "check": "POST uploadMood returns void without explicit HTTP semantics",
+      "detail": "uploadMood is void and does not return ResponseEntity or 201 Created; clients lack a consistent JSON envelope or problem details for errors.",
+      "rule_id": "API-SEM-001"
+    },
+    {
+      "severity": "warn",
+      "category": "Domain Structure",
+      "check": "Naming consistency",
+      "detail": "Package name typo repositary reduces clarity versus standard repository spelling.",
+      "rule_id": "DOM-NAM-001"
+    },
+    {
+      "severity": "warn",
+      "category": "Business Logic",
+      "check": "Scalability of nearest-location search",
+      "detail": "For each happy coordinate the code loads all Location rows and scans linearly; no spatial index or bounded query.",
+      "rule_id": "BL-PERF-001"
+    },
+    {
+      "severity": "warn",
+      "category": "Data Access",
+      "check": "Embedded H2 and console",
+      "detail": "application.properties enables H2 in-memory database and h2-console; fine for demo but not production persistence or ops posture.",
+      "rule_id": "DA-DEP-001"
+    },
+    {
+      "severity": "warn",
+      "category": "Authentication",
+      "check": "CSRF disabled globally",
+      "detail": "httpBasic().and().csrf().disable() disables CSRF for all endpoints; mitigated somewhat by stateless Basic auth but still a broad relaxation.",
+      "rule_id": "AUTH-CSRF-001"
+    },
+    {
+      "severity": "warn",
+      "category": "Validation",
+      "check": "uploadMood binding and validation coverage",
+      "detail": "Mood is not annotated with @RequestBody or validated with @Valid; servlet parameter binding may not run full Bean Validation on Mood while query params use @Validated.",
+      "rule_id": "VAL-CTL-001"
+    },
+    {
+      "severity": "warn",
+      "category": "Error Handling",
+      "check": "Centralized API error handling",
+      "detail": "No @ControllerAdvice or RFC7807-style problem responses; clients get default Spring error shapes and inconsistent behavior on validation failures.",
+      "rule_id": "ERR-GLOB-001"
+    },
+    {
+      "severity": "warn",
+      "category": "Error Handling",
+      "check": "uploadMood response contract",
+      "detail": "void controller method gives no explicit success payload or location header; harder for API consumers to handle outcomes uniformly.",
+      "rule_id": "ERR-API-001"
+    }
+  ]
+}

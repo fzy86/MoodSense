@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Backend Assessment &mdash; Mood Sense Demo (2026-04-21 14:03)</title>
+  <style>
+    body { max-width: 940px; margin: 0 auto; padding: 2rem 2.5rem;
+           font-family: system-ui, -apple-system, sans-serif; line-height: 1.65; color: #1a1a1a; }
+    h1 { font-size: 1.85rem; margin-bottom: 0.2rem; }
+    h2 { font-size: 1.35rem; border-bottom: 2px solid #ddd; padding-bottom: 0.3rem; margin-top: 2.5rem; }
+    h3 { font-size: 1.05rem; margin-top: 1.4rem; color: #333; }
+    p  { margin: 0.5rem 0 0.75rem; }
+    hr { border: none; border-top: 1px solid #eee; margin: 2rem 0; }
+    .meta { color: #555; font-size: 0.9rem; margin-top: 0; }
+    a { color: #0566c7; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: 0.9rem; }
+    th { background: #f5f5f5; text-align: left; font-weight: 600; }
+    th, td { border: 1px solid #ddd; padding: 0.45rem 0.75rem; vertical-align: top; }
+    tr:nth-child(even) { background: #fafafa; }
+    .pass       { color: #0a6b0a; }
+    .critical   { color: #b00; font-weight: 600; }
+    .suggestion { color: #886600; }
+    .nice       { color: #666; }
+    ul.findings { list-style: none; padding-left: 0; margin: 0.5rem 0 1rem; }
+    ul.findings > li { margin-bottom: 0.85rem; padding: 0.5rem 0.75rem;
+                       border-left: 4px solid #e0e0e0; background: #fafafa;
+                       border-radius: 0 4px 4px 0; }
+    ul.findings > li.critical   { border-left-color: #b00;    background: #fff5f5; }
+    ul.findings > li.suggestion { border-left-color: #886600; background: #fffdf0; }
+    ul.findings > li.nice       { border-left-color: #bbb;    background: #f8f8f8; }
+    ul.findings > li.pass       { border-left-color: #0a6b0a; background: #f5fbf5; }
+    .finding-files { font-size: 0.82rem; margin-top: 6px; list-style: none; padding-left: 1.2em; }
+    .finding-files li { margin: 2px 0; }
+    .finding-files code { background: #f0f0f0; padding: 1px 5px; border-radius: 3px; font-size: 0.8rem; }
+    .band-fail { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 4px;
+                 background: #fce8e8; color: #b00; font-weight: 700; }
+    .band-pass { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 4px;
+                 background: #e8f5e8; color: #0a6b0a; font-weight: 700; }
+    .band-warn { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 4px;
+                 background: #fef9e7; color: #886600; font-weight: 700; }
+    .coverage-grid { display: grid; grid-template-columns: 210px 1fr;
+                     gap: 0.35rem 1rem; margin: 0.5rem 0 1rem; }
+    .coverage-grid dt { font-weight: 600; color: #444; font-size: 0.9rem; }
+    .coverage-grid dd { margin: 0; font-size: 0.9rem; }
+    ul.r-bullets { list-style: none; padding-left: 0; }
+    ul.r-bullets > li { margin-bottom: 0.5rem; }
+    ul.r-bullets ul   { margin: 0.3rem 0 0 1.2rem; }
+    footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #ddd;
+             font-size: 0.82rem; color: #666; }
+</style>
+</head>
+<body>
+
+<h1>Backend Assessment &mdash; Mood Sense Demo</h1>
+<p class="meta">
+  <strong>Repository:</strong> Mood Sense Demo &bull;
+  <strong>Date:</strong> 2026-04-21 14:03 &bull;
+  <strong>Scope:</strong> Generic rules &sect;1&ndash;&sect;7 + Spring Boot-specific rules &sect;8 &bull;
+  <strong>Stack:</strong> Java/Spring Boot &bull;
+  <strong>Rules assessed:</strong> 15 total
+</p>
+
+<h2>Summary</h2>
+<ul>
+  <li><strong>Overall:</strong> <span class="band-fail">Fail &mdash; 27 / 100 (Needs Work)</span></li>
+  <li><strong>Critical:</strong> 3</li>
+  <li><strong>Suggestions:</strong> 8</li>
+  <li><strong>Nice-to-have:</strong> 0</li>
+  <li><strong>Pass / Pass (N/A):</strong> 4</li>
+</ul>
+
+<h2>Assessment coverage</h2>
+<dl class="coverage-grid">
+  <dt>Framework detected</dt><dd>Spring Boot 2.7.0, Java 11, spring-boot-starter-web, security, data-jpa, validation, H2</dd>
+  <dt>Modules scanned</dt><dd></dd>
+  <dt>Source files</dt><dd>11</dd>
+  <dt>Test files</dt><dd>N/A</dd>
+  <dt>Controllers (0)</dt><dd></dd>
+  <dt>Services</dt><dd>N/A service files</dd>
+  <dt>Repositories</dt><dd>N/A repositories</dd>
+  <dt>Entities / Documents</dt><dd>N/A</dd>
+  <dt>Messaging consumers</dt><dd>N/A</dd>
+  <dt>Schedulers</dt><dd>N/A</dd>
+  <dt>Global error handlers</dt><dd>N/A</dd>
+  <dt>Auth libraries</dt><dd>N/A</dd>
+</dl>
+
+<h2>R-Analysis methodology</h2>
+
+<h3>Retire</h3>
+<p>See per-skill Retire bullets in &sect;1&ndash;&sect;7.</p>
+
+<h3>Refactor</h3>
+<p>See per-skill Refactor bullets in &sect;1&ndash;&sect;7.</p>
+
+<h3>Rebuild</h3>
+<p>Critical issues requiring immediate action:</p>
+<ul>
+  <li><strong>API Design:</strong> CrudRepository ID type does not match Mood primary key. MoodRepository extends CrudRepository&lt;Mood, String&gt; but Mood uses int @GeneratedValue id; ID typing is inconsistent and error-prone for callers.</li>
+  <li><strong>Business Logic:</strong> Nearest happy location distance calculation. getBestLocationFromCoordinate uses location.</li>
+  <li><strong>Authentication:</strong> In-memory users with hardcoded credentials. SpringSecurityConfig defines user1/pwd1 and user2/pwd2 in source; no external IdP, rotation, or secret management.</li>
+</ul>
+
+<h3>Deliverable structure</h3>
+<table>
+<thead>
+<tr><th>Component</th><th>Type</th><th>Risk</th><th>Effort</th><th>Recommendation</th><th>Link</th></tr>
+</thead>
+<tbody>
+<tr><td>api-design</td><td>Backend</td><td>High</td><td>Low</td><td>Refactor</td><td><a href="#component-api-design">&sect;1</a></td></tr>
+<tr><td>domain-structure</td><td>Backend</td><td>Medium</td><td>Low</td><td>Refactor</td><td><a href="#component-domain-structure">&sect;2</a></td></tr>
+<tr><td>business-logic</td><td>Backend</td><td>High</td><td>Low</td><td>Refactor</td><td><a href="#component-business-logic">&sect;3</a></td></tr>
+<tr><td>data-access</td><td>Backend</td><td>Medium</td><td>Low</td><td>Refactor</td><td><a href="#component-data-access">&sect;4</a></td></tr>
+<tr><td>authentication</td><td>Backend</td><td>High</td><td>High</td><td>Rebuild</td><td><a href="#component-authentication">&sect;5</a></td></tr>
+<tr><td>validation</td><td>Backend</td><td>Medium</td><td>Low</td><td>Refactor</td><td><a href="#component-validation">&sect;6</a></td></tr>
+<tr><td>error-handling</td><td>Backend</td><td>Medium</td><td>Low</td><td>Refactor</td><td><a href="#component-error-handling">&sect;7</a></td></tr>
+</tbody>
+</table>
+
+<h3 id="rationale">Detailed rationale</h3>
+<p>
+  Primary rationale lives in each section&apos;s R-Analysis block below.
+  The Deliverable table above rolls up Risk, Effort, and Recommendation
+  from the highest-impact finding per category.
+</p>
+
+<a id="component-api-design"></a>
+<h2 id="component-api-design">1. API Design</h2>
+<p><strong>Perspective:</strong> HTTP semantics, URI naming, response shapes, versioning, pagination, documentation, and error response format.</p>
+<p><strong>Rules:</strong> <code>.cursor/skills/backend-skills/references/generic/api-design.md</code></p>
+<ul class="findings">
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>CrudRepository ID type does not match Mood primary key.</strong> MoodRepository extends CrudRepository&lt;Mood, String&gt; but Mood uses int @GeneratedValue id; ID typing is inconsistent and error-prone for callers. <em>Rule: API-MODEL-001</em>
+    <ul class="finding-files">
+      <li><code>src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</code></li>
+      <li><code>src/main/java/com/example/moodsense/demo/model/Mood.java</code></li>
+    </ul>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>POST uploadMood returns void without explicit HTTP semantics.</strong> uploadMood is void and does not return ResponseEntity or 201 Created; clients lack a consistent JSON envelope or problem details for errors. <em>Rule: API-SEM-001</em>
+    <ul class="finding-files">
+      <li><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></li>
+    </ul>
+  </li>
+</ul>
+<h3>R-Analysis &mdash; api-design</h3>
+<ul class="r-bullets">
+  <li><strong>Retire:</strong> None identified.</li>
+  <li><strong>Refactor:</strong> <ul>
+    <li>POST uploadMood returns void without explicit HTTP semantics</li>
+  </ul></li>
+  <li><strong>Rebuild:</strong> <ul>
+    <li>CrudRepository ID type does not match Mood primary key: MoodRepository extends CrudRepository&lt;Mood, String&gt; but Mood uses int @GeneratedValue id; ID typing is inconsistent and </li>
+  </ul></li>
+</ul>
+<hr>
+
+<a id="component-domain-structure"></a>
+<h2 id="component-domain-structure">2. Domain Structure</h2>
+<p><strong>Perspective:</strong> Controller/service/repository separation, design patterns, module boundaries, dependency management, configuration, and startup behaviour.</p>
+<p><strong>Rules:</strong> <code>.cursor/skills/backend-skills/references/generic/domain-structure.md</code></p>
+<ul class="findings">
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Naming consistency.</strong> Package name typo repositary reduces clarity versus standard repository spelling. <em>Rule: DOM-NAM-001</em>
+    <ul class="finding-files">
+      <li><code>src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</code></li>
+    </ul>
+  </li>
+  <li class="pass">
+    <strong>Pass:</strong> Conventional Spring layering. Packages split into controller, service, repository (spelled repositary), model, and config; responsibilities mostly aligned with layers. <em>Rule: DOM-LAY-001</em>
+  </li>
+</ul>
+<h3>R-Analysis &mdash; domain-structure</h3>
+<ul class="r-bullets">
+  <li><strong>Retire:</strong> None identified.</li>
+  <li><strong>Refactor:</strong> <ul>
+    <li>Naming consistency</li>
+  </ul></li>
+  <li><strong>Rebuild:</strong> None identified.</li>
+</ul>
+<hr>
+
+<a id="component-business-logic"></a>
+<h2 id="component-business-logic">3. Business Logic</h2>
+<p><strong>Perspective:</strong> Transactional integrity, async messaging reliability, resilience patterns, maintainability, idempotency, and domain rule enforcement.</p>
+<p><strong>Rules:</strong> <code>.cursor/skills/backend-skills/references/generic/business-logic.md</code></p>
+<ul class="findings">
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Nearest happy location distance calculation.</strong> getBestLocationFromCoordinate uses location.getLatitude() - coordinate.getLongitude() for the second squared term instead of differencing longitudes; nearby matching is mathematically wrong. <em>Rule: BL-GEO-001</em>
+    <ul class="finding-files">
+      <li><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></li>
+    </ul>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Scalability of nearest-location search.</strong> For each happy coordinate the code loads all Location rows and scans linearly; no spatial index or bounded query. <em>Rule: BL-PERF-001</em>
+    <ul class="finding-files">
+      <li><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></li>
+      <li><code>src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</code></li>
+    </ul>
+  </li>
+</ul>
+<h3>R-Analysis &mdash; business-logic</h3>
+<ul class="r-bullets">
+  <li><strong>Retire:</strong> None identified.</li>
+  <li><strong>Refactor:</strong> <ul>
+    <li>Scalability of nearest-location search</li>
+  </ul></li>
+  <li><strong>Rebuild:</strong> <ul>
+    <li>Nearest happy location distance calculation: getBestLocationFromCoordinate uses location.</li>
+  </ul></li>
+</ul>
+<hr>
+
+<a id="component-data-access"></a>
+<h2 id="component-data-access">4. Data Access</h2>
+<p><strong>Perspective:</strong> Repository patterns, transactional integrity, connection pooling, schema migrations, query efficiency, caching, and outbound integration performance.</p>
+<p><strong>Rules:</strong> <code>.cursor/skills/backend-skills/references/generic/data-access.md</code></p>
+<ul class="findings">
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Embedded H2 and console.</strong> application.properties enables H2 in-memory database and h2-console; fine for demo but not production persistence or ops posture. <em>Rule: DA-DEP-001</em>
+    <ul class="finding-files">
+      <li><code>src/main/resources/application.properties</code></li>
+    </ul>
+  </li>
+  <li class="pass">
+    <strong>Pass:</strong> User-scoped queries use parameters. JPQL uses :remoteUser @Param for mood distribution and happy coordinates, reducing injection risk and enforcing per-user filtering. <em>Rule: DA-SEC-001</em>
+  </li>
+</ul>
+<h3>R-Analysis &mdash; data-access</h3>
+<ul class="r-bullets">
+  <li><strong>Retire:</strong> None identified.</li>
+  <li><strong>Refactor:</strong> <ul>
+    <li>Embedded H2 and console</li>
+  </ul></li>
+  <li><strong>Rebuild:</strong> None identified.</li>
+</ul>
+<hr>
+
+<a id="component-authentication"></a>
+<h2 id="component-authentication">5. Authentication</h2>
+<p><strong>Perspective:</strong> Inbound request authentication, role/permission enforcement, session management, and outbound credential security.</p>
+<p><strong>Rules:</strong> <code>.cursor/skills/backend-skills/references/generic/authentication.md</code></p>
+<ul class="findings">
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>In-memory users with hardcoded credentials.</strong> SpringSecurityConfig defines user1/pwd1 and user2/pwd2 in source; no external IdP, rotation, or secret management. <em>Rule: AUTH-CRED-001</em>
+    <ul class="finding-files">
+      <li><code>src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java</code></li>
+    </ul>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>CSRF disabled globally.</strong> httpBasic().and().csrf().disable() disables CSRF for all endpoints; mitigated somewhat by stateless Basic auth but still a broad relaxation. <em>Rule: AUTH-CSRF-001</em>
+    <ul class="finding-files">
+      <li><code>src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java</code></li>
+    </ul>
+  </li>
+  <li class="pass">
+    <strong>Pass:</strong> Principal propagation. Controller uses request.getRemoteUser() when saving and querying moods so data is tied to authenticated user. <em>Rule: AUTH-CTX-001</em>
+  </li>
+</ul>
+<h3>R-Analysis &mdash; authentication</h3>
+<ul class="r-bullets">
+  <li><strong>Retire:</strong> None identified.</li>
+  <li><strong>Refactor:</strong> <ul>
+    <li>CSRF disabled globally</li>
+  </ul></li>
+  <li><strong>Rebuild:</strong> <ul>
+    <li>In-memory users with hardcoded credentials: SpringSecurityConfig defines user1/pwd1 and user2/pwd2 in source; no external IdP, rotation, or secret management.</li>
+  </ul></li>
+</ul>
+<hr>
+
+<a id="component-validation"></a>
+<h2 id="component-validation">6. Validation</h2>
+<p><strong>Perspective:</strong> Input validation coverage, Bean Validation usage, schema strictness, content-type enforcement, size/bound constraints, and custom validators.</p>
+<p><strong>Rules:</strong> <code>.cursor/skills/backend-skills/references/generic/validation.md</code></p>
+<ul class="findings">
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>uploadMood binding and validation coverage.</strong> Mood is not annotated with @RequestBody or validated with @Valid; servlet parameter binding may not run full Bean Validation on Mood while query params use @Validated. <em>Rule: VAL-CTL-001</em>
+    <ul class="finding-files">
+      <li><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></li>
+    </ul>
+  </li>
+  <li class="pass">
+    <strong>Pass:</strong> Coordinate constraints on Mood entity. latitude and longitude use @NotNull @Min @Max with clear messages for demo bounds. <em>Rule: VAL-FLD-001</em>
+  </li>
+</ul>
+<h3>R-Analysis &mdash; validation</h3>
+<ul class="r-bullets">
+  <li><strong>Retire:</strong> None identified.</li>
+  <li><strong>Refactor:</strong> <ul>
+    <li>uploadMood binding and validation coverage</li>
+  </ul></li>
+  <li><strong>Rebuild:</strong> None identified.</li>
+</ul>
+<hr>
+
+<a id="component-error-handling"></a>
+<h2 id="component-error-handling">7. Error Handling</h2>
+<p><strong>Perspective:</strong> Global exception mapping, error response consistency, graceful shutdown, async error handling, observability, and overload protection.</p>
+<p><strong>Rules:</strong> <code>.cursor/skills/backend-skills/references/generic/error-handling.md</code></p>
+<ul class="findings">
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Centralized API error handling.</strong> No @ControllerAdvice or RFC7807-style problem responses; clients get default Spring error shapes and inconsistent behavior on validation failures. <em>Rule: ERR-GLOB-001</em>
+    <ul class="finding-files">
+      <li><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></li>
+    </ul>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>uploadMood response contract.</strong> void controller method gives no explicit success payload or location header; harder for API consumers to handle outcomes uniformly. <em>Rule: ERR-API-001</em>
+    <ul class="finding-files">
+      <li><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></li>
+    </ul>
+  </li>
+</ul>
+<h3>R-Analysis &mdash; error-handling</h3>
+<ul class="r-bullets">
+  <li><strong>Retire:</strong> None identified.</li>
+  <li><strong>Refactor:</strong> <ul>
+    <li>Centralized API error handling</li>
+    <li>uploadMood response contract</li>
+  </ul></li>
+  <li><strong>Rebuild:</strong> None identified.</li>
+</ul>
+<hr>
+
+<h2>Appendix: Checklist summary</h2>
+<table>
+<thead>
+<tr><th>Category</th><th>Pass</th><th>Critical</th><th>Suggestion</th><th>Nice-to-have</th></tr>
+</thead>
+<tbody>
+<tr><td>&sect;1 API Design</td><td>&mdash;</td><td>1</td><td>1</td><td>0</td></tr>
+<tr><td>&sect;2 Domain Structure</td><td>partial</td><td>0</td><td>1</td><td>0</td></tr>
+<tr><td>&sect;3 Business Logic</td><td>&mdash;</td><td>1</td><td>1</td><td>0</td></tr>
+<tr><td>&sect;4 Data Access</td><td>partial</td><td>0</td><td>1</td><td>0</td></tr>
+<tr><td>&sect;5 Authentication</td><td>partial</td><td>1</td><td>1</td><td>0</td></tr>
+<tr><td>&sect;6 Validation</td><td>partial</td><td>0</td><td>1</td><td>0</td></tr>
+<tr><td>&sect;7 Error Handling</td><td>&mdash;</td><td>0</td><td>2</td><td>0</td></tr>
+<tr style="font-weight:600; background:#f5f5f5;"><td>TOTAL (&sect;1&ndash;&sect;7 generic + &sect;8 Spring Boot)</td><td>&mdash;</td><td>3</td><td>8</td><td>0</td></tr>
+</tbody>
+</table>
+
+<footer>
+  <p>
+    <strong>Rules applied:</strong>
+    Generic: <code>.cursor/skills/backend-skills/references/generic/*.md</code> (7 categories).
+     Framework-specific: <code>.cursor/skills/backend-skills/references/java-springboot/*.md</code> &rarr; &sect;8.
+     <em>Security audit data not found. Run the secure-code-audit skill to include OWASP findings in this report.</em>
+    R-Analysis mapping:
+    <code>.cursor/skills/backend-r-report/assets/templates/r-analysis-deliverable-structure.md</code>.
+  </p>
+  <p>
+    Generated 2026-04-21 14:03 &bull;
+    Overall score: <strong>27 / 100
+    &mdash; Needs Work</strong> &bull;
+    Generated by <code>generate_report.py</code> (no LLM).
+  </p>
+</footer>
+
+</body>
+</html>
