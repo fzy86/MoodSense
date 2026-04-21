@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Backend Assessment — Mood Sense Demo (2026-04-21)</title>
+<style>
+body{max-width:940px;margin:0 auto;padding:2rem 2.5rem;font-family:system-ui,sans-serif;line-height:1.65;color:#1a1a1a}
+h1{font-size:1.85rem;margin-bottom:.2rem}
+h2{font-size:1.35rem;border-bottom:2px solid #ddd;padding-bottom:.3rem;margin-top:2.5rem}
+.meta{color:#555;font-size:.9rem;margin-top:0}
+table{border-collapse:collapse;width:100%;margin:1rem 0;font-size:.9rem}
+th,td{border:1px solid #ddd;padding:.45rem .75rem;vertical-align:top}
+th{background:#f5f5f5}
+.band-fail{display:inline-block;padding:.15rem .6rem;border-radius:4px;background:#fce8e8;color:#b00;font-weight:700}
+ul.findings{list-style:none;padding-left:0}
+ul.findings>li{margin-bottom:.85rem;padding:.5rem .75rem;border-left:4px solid #e0e0e0;background:#fafafa;border-radius:0 4px 4px 0}
+ul.findings>li.critical{border-left-color:#b00;background:#fff5f5}
+ul.findings>li.suggestion{border-left-color:#886600;background:#fffdf0}
+ul.findings>li.pass{border-left-color:#0a6b0a;background:#f5fbf5}
+.finding-files{font-size:.82rem;margin-top:6px;list-style:none;padding-left:1.2em}
+.finding-files code{background:#f0f0f0;padding:1px 5px;border-radius:3px;font-size:.8rem}
+ul.r-bullets{list-style:none;padding-left:0}
+footer{margin-top:3rem;padding-top:1rem;border-top:1px solid #ddd;font-size:.82rem;color:#666}
+</style>
+</head>
+<body>
+<h1>Backend Assessment — Mood Sense Demo</h1>
+<p class="meta"><strong>Date:</strong> 2026-04-21 · <strong>Stack:</strong> Java/Spring Boot · <strong>Framework:</strong> Spring Boot 2.7.0 (Java 11): Web, Security, Data JPA, Validation, H2</p>
+<h2>Summary</h2>
+<ul>
+  <li><strong>Overall:</strong> <span class="band-fail">Fail — 27 / 100 (Needs Work)</span></li>
+  <li><strong>Critical (fail checks):</strong> 2</li>
+  <li><strong>Suggestions (warn checks):</strong> 14</li>
+  <li><strong>Pass:</strong> 6</li>
+</ul>
+<h2>Assessment coverage</h2>
+<table><tbody>
+<tr><th>Source files</th><td>11</td></tr>
+<tr><th>Test files</th><td>2</td></tr>
+<tr><th>Primary packages</th><td>com.example.moodsense.demo.controller, com.example.moodsense.demo.service, com.example.moodsense.demo.repositary, com.example.moodsense.demo.model, com.example.moodsense.demo.config</td></tr>
+</tbody></table>
+<h2>R-Analysis methodology</h2>
+<h3>Rebuild (critical)</h3>
+<ul>
+<li><strong>Business Logic:</strong> Nearest-location distance calculation. getBestLocationFromCoordinate uses latitude in both terms of the Euclidean distance (second term should use longitude), producing incorrect nearest-location results.</li>
+<li><strong>Data Access:</strong> Entity ID type vs repository generic. Mood declares int id with @GeneratedValue but MoodRepository extends CrudRepository&lt;Mood, String&gt;; ID types should align to avoid subtle persistence bugs.</li>
+</ul>
+<h3>Deliverable structure</h3>
+<table><thead><tr><th>Component</th><th>Risk</th><th>Recommendation</th><th>Link</th></tr></thead><tbody>
+<tr><td>api_design</td><td>Medium</td><td>Refactor</td><td><a href="#component-api_design">1</a></td></tr>
+<tr><td>domain_structure</td><td>Medium</td><td>Refactor</td><td><a href="#component-domain_structure">2</a></td></tr>
+<tr><td>business_logic</td><td>High</td><td>Refactor / Rebuild (if fails)</td><td><a href="#component-business_logic">3</a></td></tr>
+<tr><td>data_access</td><td>High</td><td>Refactor / Rebuild (if fails)</td><td><a href="#component-data_access">4</a></td></tr>
+<tr><td>authentication</td><td>Medium</td><td>Refactor</td><td><a href="#component-authentication">5</a></td></tr>
+<tr><td>validation</td><td>Medium</td><td>Refactor</td><td><a href="#component-validation">6</a></td></tr>
+<tr><td>error_handling</td><td>Medium</td><td>Refactor</td><td><a href="#component-error_handling">7</a></td></tr>
+</tbody></table>
+<a id="component-api_design"></a>
+<h2 id="component-api_design">1. API Design</h2>
+<ul class="findings">
+  <li class="suggestion"><strong>[Suggestion]</strong> <strong>REST response consistency.</strong> GET endpoints return ResponseEntity with explicit status; POST /uploadMood returns void with no status/body contract, making client error handling and API documentation harder. <em>Rule: API-RESP-001</em>    <ul class="finding-files">      <li><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></li>    </ul>  </li>
+  <li class="suggestion"><strong>[Suggestion]</strong> <strong>Request binding style.</strong> uploadMood mixes implicit Mood binding with separate @RequestParam fields; this is unconventional and easy to misuse compared to a single JSON DTO or consistent form parameters. <em>Rule: API-BIND-002</em>    <ul class="finding-files">      <li><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></li>    </ul>  </li>
+  <li class="pass"><strong>Pass</strong> <strong>Resource-oriented URLs.</strong> Small demo surface with clear verb-style paths; acceptable for a prototype though not fully RESTful. <em>Rule: API-URL-003</em>    <ul class="finding-files">      <li><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></li>    </ul>  </li>
+</ul>
+<h3>R-Analysis — api-design</h3>
+<ul class="r-bullets">
+  <li><strong>Retire:</strong> None identified.</li>
+  <li><strong>Refactor:</strong> <ul><li>REST response consistency</li><li>Request binding style</li></ul></li>
+  <li><strong>Rebuild:</strong> None identified.</li>
+</ul>
+<hr>
+<a id="component-domain_structure"></a>
+<h2 id="component-domain_structure">2. Domain Structure</h2>
+<ul class="findings">
+  <li class="pass"><strong>Pass</strong> <strong>Layered packaging.</strong> Clear separation of controller, service, repository, model, and config packages. <em>Rule: DOM-LAY-001</em>    <ul class="finding-files">      <li><code>src/main/java/com/example/moodsense/demo</code></li>    </ul>  </li>
+  <li class="suggestion"><strong>[Suggestion]</strong> <strong>Naming consistency.</strong> Repository package is spelled repositary, which hurts discoverability and consistency. <em>Rule: DOM-NAM-002</em>    <ul class="finding-files">      <li><code>src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</code></li>    </ul>  </li>
+  <li class="suggestion"><strong>[Suggestion]</strong> <strong>Entity boundaries.</strong> Mood entity doubles as API payload and persistence model; a DTO would reduce coupling and clarify API contracts. <em>Rule: DOM-BND-003</em>    <ul class="finding-files">      <li><code>src/main/java/com/example/moodsense/demo/model/Mood.java</code></li>      <li><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></li>    </ul>  </li>
+</ul>
+<h3>R-Analysis — domain-structure</h3>
+<ul class="r-bullets">
+  <li><strong>Retire:</strong> None identified.</li>
+  <li><strong>Refactor:</strong> <ul><li>Naming consistency</li><li>Entity boundaries</li></ul></li>
+  <li><strong>Rebuild:</strong> None identified.</li>
+</ul>
+<hr>
+<a id="component-business_logic"></a>
+<h2 id="component-business_logic">3. Business Logic</h2>
+<ul class="findings">
+  <li class="critical"><strong>[Critical]</strong> <strong>Nearest-location distance calculation.</strong> getBestLocationFromCoordinate uses latitude in both terms of the Euclidean distance (second term should use longitude), producing incorrect nearest-location results. <em>Rule: BL-COR-001</em>    <ul class="finding-files">      <li><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></li>    </ul>  </li>
+  <li class="suggestion"><strong>[Suggestion]</strong> <strong>Algorithmic scalability.</strong> For each happy coordinate, iterates all locations loaded from DB; acceptable for tiny datasets but does not scale and loads full location set repeatedly. <em>Rule: BL-SCL-002</em>    <ul class="finding-files">      <li><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></li>    </ul>  </li>
+  <li class="pass"><strong>Pass</strong> <strong>Service cohesion.</strong> MoodServiceImplementation delegates persistence to repository and keeps orchestration in one place. <em>Rule: BL-COH-003</em>    <ul class="finding-files">      <li><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></li>    </ul>  </li>
+</ul>
+<h3>R-Analysis — business-logic</h3>
+<ul class="r-bullets">
+  <li><strong>Retire:</strong> None identified.</li>
+  <li><strong>Refactor:</strong> <ul><li>Algorithmic scalability</li></ul></li>
+  <li><strong>Rebuild:</strong> <ul><li>Nearest-location distance calculation</li></ul></li>
+</ul>
+<hr>
+<a id="component-data_access"></a>
+<h2 id="component-data_access">4. Data Access</h2>
+<ul class="findings">
+  <li class="pass"><strong>Pass</strong> <strong>Repository queries.</strong> JPQL queries for distribution, happy coordinates, and locations are explicit and parameterized with :remoteUser. <em>Rule: DA-QUE-001</em>    <ul class="finding-files">      <li><code>src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</code></li>    </ul>  </li>
+  <li class="critical"><strong>[Critical]</strong> <strong>Entity ID type vs repository generic.</strong> Mood declares int id with @GeneratedValue but MoodRepository extends CrudRepository&lt;Mood, String&gt;; ID types should align to avoid subtle persistence bugs. <em>Rule: DA-ID-002</em>    <ul class="finding-files">      <li><code>src/main/java/com/example/moodsense/demo/model/Mood.java</code></li>      <li><code>src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</code></li>    </ul>  </li>
+  <li class="pass"><strong>Pass</strong> <strong>Projection interfaces.</strong> MoodDistribution and Coordinate as Spring Data projections are appropriate for read-only query results. <em>Rule: DA-PRJ-003</em>    <ul class="finding-files">      <li><code>src/main/java/com/example/moodsense/demo/model/MoodDistribution.java</code></li>      <li><code>src/main/java/com/example/moodsense/demo/model/Coordinate.java</code></li>    </ul>  </li>
+</ul>
+<h3>R-Analysis — data-access</h3>
+<ul class="r-bullets">
+  <li><strong>Retire:</strong> None identified.</li>
+  <li><strong>Refactor:</strong> None identified.</li>
+  <li><strong>Rebuild:</strong> <ul><li>Entity ID type vs repository generic</li></ul></li>
+</ul>
+<hr>
+<a id="component-authentication"></a>
+<h2 id="component-authentication">5. Authentication</h2>
+<ul class="findings">
+  <li class="suggestion"><strong>[Suggestion]</strong> <strong>Transport and secret storage.</strong> HTTP Basic with in-memory users and hardcoded passwords is acceptable only for local demos; production would need HTTPS, external identity, and secret management. <em>Rule: AUTH-SEC-001</em>    <ul class="finding-files">      <li><code>src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java</code></li>    </ul>  </li>
+  <li class="suggestion"><strong>[Suggestion]</strong> <strong>CSRF policy.</strong> CSRF is disabled globally for the API while H2 console gets targeted CSRF ignore; state-changing POST endpoints are unprotected from CSRF in browser contexts. <em>Rule: AUTH-CSRF-002</em>    <ul class="finding-files">      <li><code>src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java</code></li>    </ul>  </li>
+  <li class="pass"><strong>Pass</strong> <strong>Authorization model.</strong> All application routes require ROLE_USER; person field is set from authenticated remote user on upload. <em>Rule: AUTHZ-003</em>    <ul class="finding-files">      <li><code>src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java</code></li>      <li><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></li>    </ul>  </li>
+  <li class="suggestion"><strong>[Suggestion]</strong> <strong>Framework API lifecycle.</strong> SpringSecurityConfig extends WebSecurityConfigurerAdapter, deprecated in favor of SecurityFilterChain bean configuration in newer Spring Security. <em>Rule: AUTH-DEP-004</em>    <ul class="finding-files">      <li><code>src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java</code></li>    </ul>  </li>
+</ul>
+<h3>R-Analysis — authentication</h3>
+<ul class="r-bullets">
+  <li><strong>Retire:</strong> <ul><li>Framework API lifecycle</li></ul></li>
+  <li><strong>Refactor:</strong> <ul><li>Transport and secret storage</li><li>CSRF policy</li><li>Framework API lifecycle</li></ul></li>
+  <li><strong>Rebuild:</strong> None identified.</li>
+</ul>
+<hr>
+<a id="component-validation"></a>
+<h2 id="component-validation">6. Validation</h2>
+<ul class="findings">
+  <li class="suggestion"><strong>[Suggestion]</strong> <strong>Bean validation on write path.</strong> uploadMood does not annotate Mood with @Valid; only some @RequestParams use @Validated, so entity field constraints may not run consistently on the mood object. <em>Rule: VAL-BDY-001</em>    <ul class="finding-files">      <li><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></li>      <li><code>src/main/java/com/example/moodsense/demo/model/Mood.java</code></li>    </ul>  </li>
+  <li class="suggestion"><strong>[Suggestion]</strong> <strong>Domain constraints.</strong> Latitude/longitude clamped to [-10,10] is arbitrary for real geography; fine for demo but misleading if treated as real coordinates. <em>Rule: VAL-DOM-002</em>    <ul class="finding-files">      <li><code>src/main/java/com/example/moodsense/demo/model/Mood.java</code></li>    </ul>  </li>
+  <li class="suggestion"><strong>[Suggestion]</strong> <strong>Enum validation misuse.</strong> MoodStatus enum carries @NotBlank on an internal field; this does not meaningfully validate incoming enum request values. <em>Rule: VAL-ENUM-003</em>    <ul class="finding-files">      <li><code>src/main/java/com/example/moodsense/demo/model/MoodStatus.java</code></li>    </ul>  </li>
+</ul>
+<h3>R-Analysis — validation</h3>
+<ul class="r-bullets">
+  <li><strong>Retire:</strong> None identified.</li>
+  <li><strong>Refactor:</strong> <ul><li>Bean validation on write path</li><li>Domain constraints</li><li>Enum validation misuse</li></ul></li>
+  <li><strong>Rebuild:</strong> None identified.</li>
+</ul>
+<hr>
+<a id="component-error_handling"></a>
+<h2 id="component-error_handling">7. Error Handling</h2>
+<ul class="findings">
+  <li class="suggestion"><strong>[Suggestion]</strong> <strong>Global exception mapping.</strong> No @ControllerAdvice or Problem Details; clients receive default Spring error payloads without consistent application-level errors. <em>Rule: ERR-GLO-001</em>    <ul class="finding-files">      <li><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></li>    </ul>  </li>
+  <li class="suggestion"><strong>[Suggestion]</strong> <strong>Failure signaling on upload.</strong> uploadMood returns void and does not set response status explicitly; persistence failures surface as generic servlet errors without domain context. <em>Rule: ERR-API-002</em>    <ul class="finding-files">      <li><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></li>    </ul>  </li>
+  <li class="suggestion"><strong>[Suggestion]</strong> <strong>Null-safety in business logic.</strong> getBestLocationFromCoordinate can return null when no locations exist; callers may need explicit handling. <em>Rule: ERR-NUL-003</em>    <ul class="finding-files">      <li><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></li>    </ul>  </li>
+</ul>
+<h3>R-Analysis — error-handling</h3>
+<ul class="r-bullets">
+  <li><strong>Retire:</strong> None identified.</li>
+  <li><strong>Refactor:</strong> <ul><li>Global exception mapping</li><li>Failure signaling on upload</li><li>Null-safety in business logic</li></ul></li>
+  <li><strong>Rebuild:</strong> None identified.</li>
+</ul>
+<hr>
+<footer><p>Generated from consolidated findings JSON in this repo (<code>findings-assessment.json</code>). MCP tools used: <code>consolidate_assessment</code>, <code>run_r_analysis</code> (cloud JSON mode).</p></footer>
+</body>
+</html>

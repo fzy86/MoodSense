@@ -1,0 +1,83 @@
+{
+  "generated": "2026-04-21",
+  "project": "Mood Sense Demo",
+  "app_folder": "/workspace",
+  "backend": "Java/Spring Boot",
+  "reference_summary": "Generic backend (7 categories, 0 rules)",
+  "scores": {
+    "api_design": {"score": 1, "max": 3},
+    "domain_structure": {"score": 1, "max": 3},
+    "business_logic": {"score": 1, "max": 3},
+    "data_access": {"score": 2, "max": 3},
+    "authentication": {"score": 1, "max": 4},
+    "validation": {"score": 0, "max": 3},
+    "error_handling": {"score": 0, "max": 3},
+    "total": 6,
+    "max": 22,
+    "overall_pct": 27,
+    "band": "Needs Work"
+  },
+  "stack_detected": {"report_profile": "springboot"},
+  "coverage": {
+    "framework_detected": "Spring Boot 2.7.0 (Java 11): Web, Security, Data JPA, Validation, H2",
+    "source_files": 11,
+    "test_files": 2,
+    "primary_packages": [
+      "com.example.moodsense.demo.controller",
+      "com.example.moodsense.demo.service",
+      "com.example.moodsense.demo.repositary",
+      "com.example.moodsense.demo.model",
+      "com.example.moodsense.demo.config"
+    ]
+  },
+  "categories": {
+    "api_design": [
+      {"check": "REST response consistency", "result": "warn", "detail": "GET endpoints return ResponseEntity with explicit status; POST /uploadMood returns void with no status/body contract, making client error handling and API documentation harder.", "rule_id": "API-RESP-001", "files": ["src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"]},
+      {"check": "Request binding style", "result": "warn", "detail": "uploadMood mixes implicit Mood binding with separate @RequestParam fields; this is unconventional and easy to misuse compared to a single JSON DTO or consistent form parameters.", "rule_id": "API-BIND-002", "files": ["src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"]},
+      {"check": "Resource-oriented URLs", "result": "pass", "detail": "Small demo surface with clear verb-style paths; acceptable for a prototype though not fully RESTful.", "rule_id": "API-URL-003", "files": ["src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"]}
+    ],
+    "domain_structure": [
+      {"check": "Layered packaging", "result": "pass", "detail": "Clear separation of controller, service, repository, model, and config packages.", "rule_id": "DOM-LAY-001", "files": ["src/main/java/com/example/moodsense/demo"]},
+      {"check": "Naming consistency", "result": "warn", "detail": "Repository package is spelled repositary, which hurts discoverability and consistency.", "rule_id": "DOM-NAM-002", "files": ["src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java"]},
+      {"check": "Entity boundaries", "result": "warn", "detail": "Mood entity doubles as API payload and persistence model; a DTO would reduce coupling and clarify API contracts.", "rule_id": "DOM-BND-003", "files": ["src/main/java/com/example/moodsense/demo/model/Mood.java", "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"]}
+    ],
+    "business_logic": [
+      {"check": "Nearest-location distance calculation", "result": "fail", "detail": "getBestLocationFromCoordinate uses latitude in both terms of the Euclidean distance (second term should use longitude), producing incorrect nearest-location results.", "rule_id": "BL-COR-001", "files": ["src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java"]},
+      {"check": "Algorithmic scalability", "result": "warn", "detail": "For each happy coordinate, iterates all locations loaded from DB; acceptable for tiny datasets but does not scale and loads full location set repeatedly.", "rule_id": "BL-SCL-002", "files": ["src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java"]},
+      {"check": "Service cohesion", "result": "pass", "detail": "MoodServiceImplementation delegates persistence to repository and keeps orchestration in one place.", "rule_id": "BL-COH-003", "files": ["src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java"]}
+    ],
+    "data_access": [
+      {"check": "Repository queries", "result": "pass", "detail": "JPQL queries for distribution, happy coordinates, and locations are explicit and parameterized with :remoteUser.", "rule_id": "DA-QUE-001", "files": ["src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java"]},
+      {"check": "Entity ID type vs repository generic", "result": "fail", "detail": "Mood declares int id with @GeneratedValue but MoodRepository extends CrudRepository<Mood, String>; ID types should align to avoid subtle persistence bugs.", "rule_id": "DA-ID-002", "files": ["src/main/java/com/example/moodsense/demo/model/Mood.java", "src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java"]},
+      {"check": "Projection interfaces", "result": "pass", "detail": "MoodDistribution and Coordinate as Spring Data projections are appropriate for read-only query results.", "rule_id": "DA-PRJ-003", "files": ["src/main/java/com/example/moodsense/demo/model/MoodDistribution.java", "src/main/java/com/example/moodsense/demo/model/Coordinate.java"]}
+    ],
+    "authentication": [
+      {"check": "Transport and secret storage", "result": "warn", "detail": "HTTP Basic with in-memory users and hardcoded passwords is acceptable only for local demos; production would need HTTPS, external identity, and secret management.", "rule_id": "AUTH-SEC-001", "files": ["src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"]},
+      {"check": "CSRF policy", "result": "warn", "detail": "CSRF is disabled globally for the API while H2 console gets targeted CSRF ignore; state-changing POST endpoints are unprotected from CSRF in browser contexts.", "rule_id": "AUTH-CSRF-002", "files": ["src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"]},
+      {"check": "Authorization model", "result": "pass", "detail": "All application routes require ROLE_USER; person field is set from authenticated remote user on upload.", "rule_id": "AUTHZ-003", "files": ["src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java", "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"]},
+      {"check": "Framework API lifecycle", "result": "warn", "detail": "SpringSecurityConfig extends WebSecurityConfigurerAdapter, deprecated in favor of SecurityFilterChain bean configuration in newer Spring Security.", "rule_id": "AUTH-DEP-004", "files": ["src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"]}
+    ],
+    "validation": [
+      {"check": "Bean validation on write path", "result": "warn", "detail": "uploadMood does not annotate Mood with @Valid; only some @RequestParams use @Validated, so entity field constraints may not run consistently on the mood object.", "rule_id": "VAL-BDY-001", "files": ["src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java", "src/main/java/com/example/moodsense/demo/model/Mood.java"]},
+      {"check": "Domain constraints", "result": "warn", "detail": "Latitude/longitude clamped to [-10,10] is arbitrary for real geography; fine for demo but misleading if treated as real coordinates.", "rule_id": "VAL-DOM-002", "files": ["src/main/java/com/example/moodsense/demo/model/Mood.java"]},
+      {"check": "Enum validation misuse", "result": "warn", "detail": "MoodStatus enum carries @NotBlank on an internal field; this does not meaningfully validate incoming enum request values.", "rule_id": "VAL-ENUM-003", "files": ["src/main/java/com/example/moodsense/demo/model/MoodStatus.java"]}
+    ],
+    "error_handling": [
+      {"check": "Global exception mapping", "result": "warn", "detail": "No @ControllerAdvice or Problem Details; clients receive default Spring error payloads without consistent application-level errors.", "rule_id": "ERR-GLO-001", "files": ["src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"]},
+      {"check": "Failure signaling on upload", "result": "warn", "detail": "uploadMood returns void and does not set response status explicitly; persistence failures surface as generic servlet errors without domain context.", "rule_id": "ERR-API-002", "files": ["src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"]},
+      {"check": "Null-safety in business logic", "result": "warn", "detail": "getBestLocationFromCoordinate can return null when no locations exist; callers may need explicit handling.", "rule_id": "ERR-NUL-003", "files": ["src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java"]}
+    ]
+  },
+  "gaps": [
+    {"severity": "fail", "category": "Business Logic", "check": "Nearest-location distance calculation", "detail": "getBestLocationFromCoordinate uses latitude in both terms of the Euclidean distance (second term should use longitude), producing incorrect nearest-location results.", "rule_id": "BL-COR-001"},
+    {"severity": "fail", "category": "Data Access", "check": "Entity ID type vs repository generic", "detail": "Mood declares int id with @GeneratedValue but MoodRepository extends CrudRepository<Mood, String>; ID types should align to avoid subtle persistence bugs.", "rule_id": "DA-ID-002"},
+    {"severity": "warn", "category": "API Design", "check": "REST response consistency", "detail": "GET endpoints return ResponseEntity with explicit status; POST /uploadMood returns void with no status/body contract, making client error handling and API documentation harder.", "rule_id": "API-RESP-001"},
+    {"severity": "warn", "category": "API Design", "check": "Request binding style", "detail": "uploadMood mixes implicit Mood binding with separate @RequestParam fields; this is unconventional and easy to misuse compared to a single JSON DTO or consistent form parameters.", "rule_id": "API-BIND-002"},
+    {"severity": "warn", "category": "Domain Structure", "check": "Naming consistency", "detail": "Repository package is spelled repositary, which hurts discoverability and consistency.", "rule_id": "DOM-NAM-002"},
+    {"severity": "warn", "category": "Domain Structure", "check": "Entity boundaries", "detail": "Mood entity doubles as API payload and persistence model; a DTO would reduce coupling and clarify API contracts.", "rule_id": "DOM-BND-003"},
+    {"severity": "warn", "category": "Business Logic", "check": "Algorithmic scalability", "detail": "For each happy coordinate, iterates all locations loaded from DB; acceptable for tiny datasets but does not scale and loads full location set repeatedly.", "rule_id": "BL-SCL-002"},
+    {"severity": "warn", "category": "Authentication", "check": "Transport and secret storage", "detail": "HTTP Basic with in-memory users and hardcoded passwords is acceptable only for local demos; production would need HTTPS, external identity, and secret management.", "rule_id": "AUTH-SEC-001"},
+    {"severity": "warn", "category": "Authentication", "check": "CSRF policy", "detail": "CSRF is disabled globally for the API while H2 console gets targeted CSRF ignore; state-changing POST endpoints are unprotected from CSRF in browser contexts.", "rule_id": "AUTH-CSRF-002"},
+    {"severity": "warn", "category": "Authentication", "check": "Framework API lifecycle", "detail": "SpringSecurityConfig extends WebSecurityConfigurerAdapter, deprecated in favor of SecurityFilterChain bean configuration in newer Spring Security.", "rule_id": "AUTH-DEP-004"}
+  ]
+}
