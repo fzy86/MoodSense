@@ -1,0 +1,1159 @@
+{
+  "generated": "2026-04-21",
+  "project": "Mood Sense Demo",
+  "backend": "Java/Spring Boot",
+  "reference_summary": "Spring Boot mood tracking API (7 assessment categories)",
+  "scores": {
+    "api_design": {
+      "score": 1.0,
+      "max": 10
+    },
+    "domain_structure": {
+      "score": 4.0,
+      "max": 10
+    },
+    "business_logic": {
+      "score": 2.0,
+      "max": 10
+    },
+    "data_access": {
+      "score": 4.5,
+      "max": 10
+    },
+    "authentication": {
+      "score": 3.5,
+      "max": 10
+    },
+    "validation": {
+      "score": 2.0,
+      "max": 10
+    },
+    "error_handling": {
+      "score": 1.0,
+      "max": 10
+    },
+    "total": 18.0,
+    "max": 70,
+    "overall_pct": 26,
+    "band": "Critical"
+  },
+  "stack_detected": {
+    "report_profile": "springboot"
+  },
+  "coverage": {
+    "framework_detected": "Spring Boot 2.7 (Java 11), Spring Web, Spring Data JPA, Spring Security, H2",
+    "source_files": 13,
+    "main_java_files": 11,
+    "test_java_files": 2
+  },
+  "categories": {
+    "api_design": [
+      {
+        "rule_id": "api_001",
+        "check": "RESTful URL naming (verbs vs nouns, resource naming)",
+        "result": "fail",
+        "detail": "All three endpoints use verb-based naming which violates REST conventions. '/uploadMood' use...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+        ]
+      },
+      {
+        "rule_id": "api_002",
+        "check": "HTTP method usage (GET/POST/PUT/DELETE appropriateness)",
+        "result": "warn",
+        "detail": "The HTTP methods used are partially correct: POST is used for creating a mood entry ('/uploa...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+        ]
+      },
+      {
+        "rule_id": "api_003",
+        "check": "Response status codes (proper HTTP status codes returned)",
+        "result": "fail",
+        "detail": "The uploadMood POST endpoint returns void, which defaults to HTTP 200 OK. For a resource cre...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+        ]
+      },
+      {
+        "rule_id": "api_004",
+        "check": "Content type / media type handling",
+        "result": "warn",
+        "detail": "No explicit 'produces' or 'consumes' media type declarations are present on any @RequestMapp...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+        ]
+      },
+      {
+        "rule_id": "api_005",
+        "check": "API versioning strategy",
+        "result": "fail",
+        "detail": "There is no API versioning strategy implemented. The endpoints are mounted directly at the r...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+        ]
+      },
+      {
+        "rule_id": "api_006",
+        "check": "Request/Response DTO usage (vs entity exposure)",
+        "result": "fail",
+        "detail": "JPA entities are directly exposed in both the request and response layers, violating the sep...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+        ]
+      },
+      {
+        "rule_id": "api_007",
+        "check": "Pagination support for list endpoints",
+        "result": "fail",
+        "detail": "Neither of the two GET endpoints supports pagination. '/getMoodDistribution' returns a raw L...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+        ]
+      },
+      {
+        "rule_id": "api_008",
+        "check": "HATEOAS / Hypermedia support",
+        "result": "fail",
+        "detail": "There is no HATEOAS or hypermedia support. The 'spring-boot-starter-hateoas' dependency is n...",
+        "files": [
+          "pom.xml"
+        ]
+      },
+      {
+        "rule_id": "api_009",
+        "check": "API documentation (Swagger/OpenAPI)",
+        "result": "fail",
+        "detail": "There is no API documentation tooling configured. The pom.xml does not include 'springdoc-op...",
+        "files": [
+          "pom.xml"
+        ]
+      },
+      {
+        "rule_id": "api_010",
+        "check": "Consistent endpoint naming patterns",
+        "result": "fail",
+        "detail": "Endpoint naming is inconsistent across the three routes. '/uploadMood' uses 'upload' as its ...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+        ]
+      }
+    ],
+    "domain_structure": [
+      {
+        "rule_id": "dom_001",
+        "check": "Package naming convention",
+        "result": "fail",
+        "detail": "The persistence package is named `repositary` instead of the standard `repository`, which br...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java"
+        ]
+      },
+      {
+        "rule_id": "dom_002",
+        "check": "Separation of concerns",
+        "result": "pass",
+        "detail": "The codebase uses distinct packages for controller, service, persistence, and model types, a...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+        ]
+      },
+      {
+        "rule_id": "dom_003",
+        "check": "Domain model richness",
+        "result": "warn",
+        "detail": "Entities and enums are Lombok `@Data` data carriers with almost no behavior; business rules ...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/model/Mood.java"
+        ]
+      },
+      {
+        "rule_id": "dom_004",
+        "check": "Entity design",
+        "result": "fail",
+        "detail": "JPA entities lack audit fields (`createdAt` / `updatedAt`). `Mood` uses primitive `int` for ...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/model/Mood.java"
+        ]
+      },
+      {
+        "rule_id": "dom_005",
+        "check": "Value objects",
+        "result": "warn",
+        "detail": "`Coordinate` is a Spring Data projection interface (getters only), not an explicit immutable...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/model/Coordinate.java"
+        ]
+      },
+      {
+        "rule_id": "dom_006",
+        "check": "DTO separation",
+        "result": "fail",
+        "detail": "The REST controller accepts and mutates the `Mood` JPA entity directly (`uploadMood(..., Moo...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+        ]
+      },
+      {
+        "rule_id": "dom_007",
+        "check": "Interface-driven design",
+        "result": "pass",
+        "detail": "`MoodService` is a dedicated interface with a Spring `@Service` implementation registered as...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/service/MoodService.java"
+        ]
+      },
+      {
+        "rule_id": "dom_008",
+        "check": "Naming conventions",
+        "result": "warn",
+        "detail": "Most names follow Java conventions; minor issues include `getHappyNearByLocations` (awkward ...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/service/MoodService.java"
+        ]
+      },
+      {
+        "rule_id": "dom_009",
+        "check": "Single Responsibility",
+        "result": "warn",
+        "detail": "`MoodServiceImplementation` both delegates persistence and implements location resolution an...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java"
+        ]
+      },
+      {
+        "rule_id": "dom_010",
+        "check": "Application entry point",
+        "result": "fail",
+        "detail": "The Spring Boot main class is named `DemoApplication` rather than something aligned with the...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/DemoApplication.java"
+        ]
+      }
+    ],
+    "business_logic": [
+      {
+        "rule_id": "biz_001",
+        "check": "Logic correctness",
+        "result": "fail",
+        "detail": "Nearest-location distance in getBestLocationFromCoordinate is wrong: the second squared term...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java"
+        ]
+      },
+      {
+        "rule_id": "biz_002",
+        "check": "Transaction management",
+        "result": "fail",
+        "detail": "MoodServiceImplementation.save delegates to the repository but neither the service method no...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java"
+        ]
+      },
+      {
+        "rule_id": "biz_003",
+        "check": "Service layer completeness",
+        "result": "warn",
+        "detail": "uploadMood in the controller assembles the Mood (person from request, coordinates, status) b...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+        ]
+      },
+      {
+        "rule_id": "biz_004",
+        "check": "Null safety",
+        "result": "fail",
+        "detail": "getHappyNearByLocations and getLocationsFromCoordinates do not guard against a null remoteUs...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java"
+        ]
+      },
+      {
+        "rule_id": "biz_005",
+        "check": "Performance - N+1 queries",
+        "result": "fail",
+        "detail": "getBestLocationFromCoordinate calls moodRepository.getAllLocations() inside its loop, and ge...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java"
+        ]
+      },
+      {
+        "rule_id": "biz_006",
+        "check": "Magic values",
+        "result": "warn",
+        "detail": "getAllHappyCoordinates uses the string literal 'HAPPY' in JPQL. If MoodStatus enum values ch...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java"
+        ]
+      },
+      {
+        "rule_id": "biz_007",
+        "check": "Immutability and side-effects",
+        "result": "warn",
+        "detail": "getHappyNearByLocations appears to be a pure read but triggers repeated repository reads (ge...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java"
+        ]
+      },
+      {
+        "rule_id": "biz_008",
+        "check": "Method visibility",
+        "result": "fail",
+        "detail": "Helper methods getLocationsFromCoordinates and getBestLocationFromCoordinate are public thou...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java"
+        ]
+      },
+      {
+        "rule_id": "biz_009",
+        "check": "Repository ID type mismatch",
+        "result": "fail",
+        "detail": "MoodRepository extends CrudRepository<Mood, String> but Mood declares @Id private int id. Sp...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java"
+        ]
+      },
+      {
+        "rule_id": "biz_010",
+        "check": "Input sanitization",
+        "result": "warn",
+        "detail": "uploadMood validates moodStatus, latitude, and longitude with @Validated @RequestParam, and ...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+        ]
+      }
+    ],
+    "data_access": [
+      {
+        "rule_id": "da_001",
+        "check": "Repository extends appropriate interface",
+        "result": "warn",
+        "detail": "MoodRepository extends CrudRepository, which is valid but less idiomatic than JpaRepository ...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java"
+        ]
+      },
+      {
+        "rule_id": "da_002",
+        "check": "Entity ID type consistency",
+        "result": "fail",
+        "detail": "Mood declares @Id @GeneratedValue on a primitive int field, but MoodRepository is parameteri...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java"
+        ]
+      },
+      {
+        "rule_id": "da_003",
+        "check": "Use of production-grade database",
+        "result": "warn",
+        "detail": "application.properties configures jdbc:h2:mem:testdb with H2Dialect and enables the H2 conso...",
+        "files": [
+          "src/main/resources/application.properties"
+        ]
+      },
+      {
+        "rule_id": "da_004",
+        "check": "N+1 query problem",
+        "result": "fail",
+        "detail": "getBestLocationFromCoordinate calls moodRepository.getAllLocations() inside a for loop over ...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java"
+        ]
+      },
+      {
+        "rule_id": "da_005",
+        "check": "Query hardcoded enum string",
+        "result": "warn",
+        "detail": "getAllHappyCoordinates uses JPQL with moodStatus = 'HAPPY' as a literal. Prefer a bind param...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java"
+        ]
+      },
+      {
+        "rule_id": "da_006",
+        "check": "Proper use of @Transactional",
+        "result": "warn",
+        "detail": "No @Transactional annotations appear on the service layer. Spring Data repository methods ar...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java"
+        ]
+      },
+      {
+        "rule_id": "da_007",
+        "check": "Fetch strategy",
+        "result": "pass",
+        "detail": "Entities Mood and Location are standalone with scalar fields only; there are no @OneToMany, ...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/model/Mood.java"
+        ]
+      },
+      {
+        "rule_id": "da_008",
+        "check": "Database migration tool",
+        "result": "warn",
+        "detail": "pom.xml has no Flyway or Liquibase dependency; schema is effectively managed by JPA ddl-auto...",
+        "files": [
+          "pom.xml"
+        ]
+      },
+      {
+        "rule_id": "da_009",
+        "check": "Connection pool configuration",
+        "result": "warn",
+        "detail": "No explicit HikariCP (or other pool) settings are present. Spring Boot 2.7 still defaults to...",
+        "files": [
+          "src/main/resources/application.properties"
+        ]
+      },
+      {
+        "rule_id": "da_010",
+        "check": "Repository naming",
+        "result": "warn",
+        "detail": "The Java package is named com.example.moodsense.demo.repositary, which misspells repository....",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java"
+        ]
+      }
+    ],
+    "authentication": [
+      {
+        "rule_id": "auth_001",
+        "check": "Authentication mechanism (HTTP Basic, JWT, OAuth2)",
+        "result": "warn",
+        "detail": "The application uses HTTP Basic authentication (.httpBasic()) which transmits credentials (B...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+        ]
+      },
+      {
+        "rule_id": "auth_002",
+        "check": "Password storage security",
+        "result": "pass",
+        "detail": "Passwords are hashed using BCryptPasswordEncoder before being stored in the InMemoryUserDeta...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+        ]
+      },
+      {
+        "rule_id": "auth_003",
+        "check": "CSRF protection configuration",
+        "result": "fail",
+        "detail": "CSRF protection is globally disabled via .csrf().disable() at line 35 of SpringSecurityConfi...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+        ]
+      },
+      {
+        "rule_id": "auth_004",
+        "check": "CORS configuration",
+        "result": "warn",
+        "detail": "There is no CORS configuration anywhere in the application. No @CrossOrigin annotations are ...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+        ]
+      },
+      {
+        "rule_id": "auth_005",
+        "check": "User management approach (in-memory vs database)",
+        "result": "fail",
+        "detail": "User credentials are managed entirely in-memory via InMemoryUserDetailsManager with a hardco...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+        ]
+      },
+      {
+        "rule_id": "auth_006",
+        "check": "Role-based access control",
+        "result": "warn",
+        "detail": "Role-based access control is present but overly simplistic. All endpoints are protected by h...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+        ]
+      },
+      {
+        "rule_id": "auth_007",
+        "check": "Security headers configuration",
+        "result": "warn",
+        "detail": "The only security header explicitly configured is X-Frame-Options set to SAMEORIGIN (via .he...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+        ]
+      },
+      {
+        "rule_id": "auth_008",
+        "check": "H2 console security exposure",
+        "result": "fail",
+        "detail": "The H2 database console is enabled (spring.h2.console.enabled=true) and its endpoints (/h2-c...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+        ]
+      },
+      {
+        "rule_id": "auth_009",
+        "check": "Deprecated API usage (WebSecurityConfigurerAdapter)",
+        "result": "warn",
+        "detail": "SpringSecurityConfig extends WebSecurityConfigurerAdapter, which was deprecated in Spring Se...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+        ]
+      },
+      {
+        "rule_id": "auth_010",
+        "check": "Credential hardcoding / secrets management",
+        "result": "fail",
+        "detail": "Usernames and passwords ('user1'/'pwd1', 'user2'/'pwd2') are hardcoded directly in the Java ...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+        ]
+      }
+    ],
+    "validation": [
+      {
+        "rule_id": "val_001",
+        "check": "Bean validation usage (@Valid/@Validated on controller parameters)",
+        "result": "fail",
+        "detail": "The uploadMood endpoint accepts a Mood object as a method parameter (bound as a model attrib...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+        ]
+      },
+      {
+        "rule_id": "val_002",
+        "check": "Entity constraint annotations completeness",
+        "result": "warn",
+        "detail": "The Mood entity defines @NotNull, @Min, and @Max on latitude and longitude, which is a reaso...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/model/Mood.java"
+        ]
+      },
+      {
+        "rule_id": "val_003",
+        "check": "Service layer validation",
+        "result": "fail",
+        "detail": "MoodServiceImplementation.save() directly delegates to moodRepository.save(mood) with no val...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java"
+        ]
+      },
+      {
+        "rule_id": "val_004",
+        "check": "Input sanitization (XSS, SQL injection)",
+        "result": "warn",
+        "detail": "There is no explicit input sanitization anywhere in the codebase. The 'person' field is popu...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+        ]
+      },
+      {
+        "rule_id": "val_005",
+        "check": "Enum validation handling",
+        "result": "fail",
+        "detail": "MoodStatus is accepted as a @RequestParam in the uploadMood endpoint. When a client supplies...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/model/MoodStatus.java"
+        ]
+      },
+      {
+        "rule_id": "val_006",
+        "check": "@NotNull on primitive types (int vs Integer)",
+        "result": "fail",
+        "detail": "The Mood entity declares 'latitude' and 'longitude' as primitive 'int' fields, then annotate...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/model/Mood.java"
+        ]
+      },
+      {
+        "rule_id": "val_007",
+        "check": "Validation error response handling",
+        "result": "fail",
+        "detail": "There is no structured error response handling anywhere in the application. The uploadMood m...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+        ]
+      },
+      {
+        "rule_id": "val_008",
+        "check": "Custom validators",
+        "result": "warn",
+        "detail": "No custom validators (implementations of ConstraintValidator) are defined in the project. Wh...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/model/Mood.java"
+        ]
+      },
+      {
+        "rule_id": "val_009",
+        "check": "@Validated vs @Valid usage",
+        "result": "fail",
+        "detail": "@Validated and @Valid are used incorrectly in this application. In the uploadMood method, @V...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+        ]
+      },
+      {
+        "rule_id": "val_010",
+        "check": "Cross-field validation",
+        "result": "warn",
+        "detail": "No cross-field validation exists in the application. Latitude and longitude are validated in...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/model/Mood.java"
+        ]
+      }
+    ],
+    "error_handling": [
+      {
+        "rule_id": "err_001",
+        "check": "Global exception handler",
+        "result": "fail",
+        "detail": "The project contains no @ControllerAdvice or @RestControllerAdvice class and no @ExceptionHa...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+        ]
+      },
+      {
+        "rule_id": "err_002",
+        "check": "Consistent error response format",
+        "result": "fail",
+        "detail": "There is no shared error response DTO (for example fields such as message, timestamp, path, ...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+        ]
+      },
+      {
+        "rule_id": "err_003",
+        "check": "Null return handling",
+        "result": "fail",
+        "detail": "getBestLocationFromCoordinate initializes result to null and returns it when no locations ex...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java"
+        ]
+      },
+      {
+        "rule_id": "err_004",
+        "check": "void endpoint response",
+        "result": "fail",
+        "detail": "uploadMood is declared void and does not set an explicit HTTP status on the HttpServletRespo...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+        ]
+      },
+      {
+        "rule_id": "err_005",
+        "check": "No custom exceptions",
+        "result": "fail",
+        "detail": "No domain-specific exceptions (for example for missing moods or locations) appear anywhere i...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/service/MoodService.java"
+        ]
+      },
+      {
+        "rule_id": "err_006",
+        "check": "Database error handling",
+        "result": "fail",
+        "detail": "MoodRepository extends CrudRepository and save flows through moodRepository.save in MoodServ...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java"
+        ]
+      },
+      {
+        "rule_id": "err_007",
+        "check": "Inconsistent ResponseEntity usage",
+        "result": "fail",
+        "detail": "uploadMood returns void while getMoodDistribution and getHappyNearByLocations return Respons...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+        ]
+      },
+      {
+        "rule_id": "err_008",
+        "check": "Logging",
+        "result": "fail",
+        "detail": "There is no SLF4J Logger, @Slf4j, or LoggerFactory usage in MoodSenseController or MoodServi...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+        ]
+      },
+      {
+        "rule_id": "err_009",
+        "check": "Exception propagation",
+        "result": "warn",
+        "detail": "Service and repository methods do not declare checked exceptions, which is normal in Spring....",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java"
+        ]
+      },
+      {
+        "rule_id": "err_010",
+        "check": "HTTP 500 on unhandled exceptions",
+        "result": "warn",
+        "detail": "Without a @RestControllerAdvice, unhandled exceptions are handled by Spring Boot\u2019s default m...",
+        "files": [
+          "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+        ]
+      }
+    ]
+  },
+  "gaps": [
+    {
+      "severity": "fail",
+      "category": "API Design",
+      "check": "RESTful URL naming (verbs vs nouns, resource naming)",
+      "detail": "All three endpoints use verb-based naming which violates REST conventions. '/uploadMood' use...",
+      "rule_id": "api_001"
+    },
+    {
+      "severity": "warn",
+      "category": "API Design",
+      "check": "HTTP method usage (GET/POST/PUT/DELETE appropriateness)",
+      "detail": "The HTTP methods used are partially correct: POST is used for creating a mood entry ('/uploa...",
+      "rule_id": "api_002"
+    },
+    {
+      "severity": "fail",
+      "category": "API Design",
+      "check": "Response status codes (proper HTTP status codes returned)",
+      "detail": "The uploadMood POST endpoint returns void, which defaults to HTTP 200 OK. For a resource cre...",
+      "rule_id": "api_003"
+    },
+    {
+      "severity": "warn",
+      "category": "API Design",
+      "check": "Content type / media type handling",
+      "detail": "No explicit 'produces' or 'consumes' media type declarations are present on any @RequestMapp...",
+      "rule_id": "api_004"
+    },
+    {
+      "severity": "fail",
+      "category": "API Design",
+      "check": "API versioning strategy",
+      "detail": "There is no API versioning strategy implemented. The endpoints are mounted directly at the r...",
+      "rule_id": "api_005"
+    },
+    {
+      "severity": "fail",
+      "category": "API Design",
+      "check": "Request/Response DTO usage (vs entity exposure)",
+      "detail": "JPA entities are directly exposed in both the request and response layers, violating the sep...",
+      "rule_id": "api_006"
+    },
+    {
+      "severity": "fail",
+      "category": "API Design",
+      "check": "Pagination support for list endpoints",
+      "detail": "Neither of the two GET endpoints supports pagination. '/getMoodDistribution' returns a raw L...",
+      "rule_id": "api_007"
+    },
+    {
+      "severity": "fail",
+      "category": "API Design",
+      "check": "HATEOAS / Hypermedia support",
+      "detail": "There is no HATEOAS or hypermedia support. The 'spring-boot-starter-hateoas' dependency is n...",
+      "rule_id": "api_008"
+    },
+    {
+      "severity": "fail",
+      "category": "API Design",
+      "check": "API documentation (Swagger/OpenAPI)",
+      "detail": "There is no API documentation tooling configured. The pom.xml does not include 'springdoc-op...",
+      "rule_id": "api_009"
+    },
+    {
+      "severity": "fail",
+      "category": "API Design",
+      "check": "Consistent endpoint naming patterns",
+      "detail": "Endpoint naming is inconsistent across the three routes. '/uploadMood' uses 'upload' as its ...",
+      "rule_id": "api_010"
+    },
+    {
+      "severity": "fail",
+      "category": "Domain Structure",
+      "check": "Package naming convention",
+      "detail": "The persistence package is named `repositary` instead of the standard `repository`, which br...",
+      "rule_id": "dom_001"
+    },
+    {
+      "severity": "warn",
+      "category": "Domain Structure",
+      "check": "Domain model richness",
+      "detail": "Entities and enums are Lombok `@Data` data carriers with almost no behavior; business rules ...",
+      "rule_id": "dom_003"
+    },
+    {
+      "severity": "fail",
+      "category": "Domain Structure",
+      "check": "Entity design",
+      "detail": "JPA entities lack audit fields (`createdAt` / `updatedAt`). `Mood` uses primitive `int` for ...",
+      "rule_id": "dom_004"
+    },
+    {
+      "severity": "warn",
+      "category": "Domain Structure",
+      "check": "Value objects",
+      "detail": "`Coordinate` is a Spring Data projection interface (getters only), not an explicit immutable...",
+      "rule_id": "dom_005"
+    },
+    {
+      "severity": "fail",
+      "category": "Domain Structure",
+      "check": "DTO separation",
+      "detail": "The REST controller accepts and mutates the `Mood` JPA entity directly (`uploadMood(..., Moo...",
+      "rule_id": "dom_006"
+    },
+    {
+      "severity": "warn",
+      "category": "Domain Structure",
+      "check": "Naming conventions",
+      "detail": "Most names follow Java conventions; minor issues include `getHappyNearByLocations` (awkward ...",
+      "rule_id": "dom_008"
+    },
+    {
+      "severity": "warn",
+      "category": "Domain Structure",
+      "check": "Single Responsibility",
+      "detail": "`MoodServiceImplementation` both delegates persistence and implements location resolution an...",
+      "rule_id": "dom_009"
+    },
+    {
+      "severity": "fail",
+      "category": "Domain Structure",
+      "check": "Application entry point",
+      "detail": "The Spring Boot main class is named `DemoApplication` rather than something aligned with the...",
+      "rule_id": "dom_010"
+    },
+    {
+      "severity": "fail",
+      "category": "Business Logic",
+      "check": "Logic correctness",
+      "detail": "Nearest-location distance in getBestLocationFromCoordinate is wrong: the second squared term...",
+      "rule_id": "biz_001"
+    },
+    {
+      "severity": "fail",
+      "category": "Business Logic",
+      "check": "Transaction management",
+      "detail": "MoodServiceImplementation.save delegates to the repository but neither the service method no...",
+      "rule_id": "biz_002"
+    },
+    {
+      "severity": "warn",
+      "category": "Business Logic",
+      "check": "Service layer completeness",
+      "detail": "uploadMood in the controller assembles the Mood (person from request, coordinates, status) b...",
+      "rule_id": "biz_003"
+    },
+    {
+      "severity": "fail",
+      "category": "Business Logic",
+      "check": "Null safety",
+      "detail": "getHappyNearByLocations and getLocationsFromCoordinates do not guard against a null remoteUs...",
+      "rule_id": "biz_004"
+    },
+    {
+      "severity": "fail",
+      "category": "Business Logic",
+      "check": "Performance - N+1 queries",
+      "detail": "getBestLocationFromCoordinate calls moodRepository.getAllLocations() inside its loop, and ge...",
+      "rule_id": "biz_005"
+    },
+    {
+      "severity": "warn",
+      "category": "Business Logic",
+      "check": "Magic values",
+      "detail": "getAllHappyCoordinates uses the string literal 'HAPPY' in JPQL. If MoodStatus enum values ch...",
+      "rule_id": "biz_006"
+    },
+    {
+      "severity": "warn",
+      "category": "Business Logic",
+      "check": "Immutability and side-effects",
+      "detail": "getHappyNearByLocations appears to be a pure read but triggers repeated repository reads (ge...",
+      "rule_id": "biz_007"
+    },
+    {
+      "severity": "fail",
+      "category": "Business Logic",
+      "check": "Method visibility",
+      "detail": "Helper methods getLocationsFromCoordinates and getBestLocationFromCoordinate are public thou...",
+      "rule_id": "biz_008"
+    },
+    {
+      "severity": "fail",
+      "category": "Business Logic",
+      "check": "Repository ID type mismatch",
+      "detail": "MoodRepository extends CrudRepository<Mood, String> but Mood declares @Id private int id. Sp...",
+      "rule_id": "biz_009"
+    },
+    {
+      "severity": "warn",
+      "category": "Business Logic",
+      "check": "Input sanitization",
+      "detail": "uploadMood validates moodStatus, latitude, and longitude with @Validated @RequestParam, and ...",
+      "rule_id": "biz_010"
+    },
+    {
+      "severity": "warn",
+      "category": "Data Access",
+      "check": "Repository extends appropriate interface",
+      "detail": "MoodRepository extends CrudRepository, which is valid but less idiomatic than JpaRepository ...",
+      "rule_id": "da_001"
+    },
+    {
+      "severity": "fail",
+      "category": "Data Access",
+      "check": "Entity ID type consistency",
+      "detail": "Mood declares @Id @GeneratedValue on a primitive int field, but MoodRepository is parameteri...",
+      "rule_id": "da_002"
+    },
+    {
+      "severity": "warn",
+      "category": "Data Access",
+      "check": "Use of production-grade database",
+      "detail": "application.properties configures jdbc:h2:mem:testdb with H2Dialect and enables the H2 conso...",
+      "rule_id": "da_003"
+    },
+    {
+      "severity": "fail",
+      "category": "Data Access",
+      "check": "N+1 query problem",
+      "detail": "getBestLocationFromCoordinate calls moodRepository.getAllLocations() inside a for loop over ...",
+      "rule_id": "da_004"
+    },
+    {
+      "severity": "warn",
+      "category": "Data Access",
+      "check": "Query hardcoded enum string",
+      "detail": "getAllHappyCoordinates uses JPQL with moodStatus = 'HAPPY' as a literal. Prefer a bind param...",
+      "rule_id": "da_005"
+    },
+    {
+      "severity": "warn",
+      "category": "Data Access",
+      "check": "Proper use of @Transactional",
+      "detail": "No @Transactional annotations appear on the service layer. Spring Data repository methods ar...",
+      "rule_id": "da_006"
+    },
+    {
+      "severity": "warn",
+      "category": "Data Access",
+      "check": "Database migration tool",
+      "detail": "pom.xml has no Flyway or Liquibase dependency; schema is effectively managed by JPA ddl-auto...",
+      "rule_id": "da_008"
+    },
+    {
+      "severity": "warn",
+      "category": "Data Access",
+      "check": "Connection pool configuration",
+      "detail": "No explicit HikariCP (or other pool) settings are present. Spring Boot 2.7 still defaults to...",
+      "rule_id": "da_009"
+    },
+    {
+      "severity": "warn",
+      "category": "Data Access",
+      "check": "Repository naming",
+      "detail": "The Java package is named com.example.moodsense.demo.repositary, which misspells repository....",
+      "rule_id": "da_010"
+    },
+    {
+      "severity": "warn",
+      "category": "Authentication",
+      "check": "Authentication mechanism (HTTP Basic, JWT, OAuth2)",
+      "detail": "The application uses HTTP Basic authentication (.httpBasic()) which transmits credentials (B...",
+      "rule_id": "auth_001"
+    },
+    {
+      "severity": "fail",
+      "category": "Authentication",
+      "check": "CSRF protection configuration",
+      "detail": "CSRF protection is globally disabled via .csrf().disable() at line 35 of SpringSecurityConfi...",
+      "rule_id": "auth_003"
+    },
+    {
+      "severity": "warn",
+      "category": "Authentication",
+      "check": "CORS configuration",
+      "detail": "There is no CORS configuration anywhere in the application. No @CrossOrigin annotations are ...",
+      "rule_id": "auth_004"
+    },
+    {
+      "severity": "fail",
+      "category": "Authentication",
+      "check": "User management approach (in-memory vs database)",
+      "detail": "User credentials are managed entirely in-memory via InMemoryUserDetailsManager with a hardco...",
+      "rule_id": "auth_005"
+    },
+    {
+      "severity": "warn",
+      "category": "Authentication",
+      "check": "Role-based access control",
+      "detail": "Role-based access control is present but overly simplistic. All endpoints are protected by h...",
+      "rule_id": "auth_006"
+    },
+    {
+      "severity": "warn",
+      "category": "Authentication",
+      "check": "Security headers configuration",
+      "detail": "The only security header explicitly configured is X-Frame-Options set to SAMEORIGIN (via .he...",
+      "rule_id": "auth_007"
+    },
+    {
+      "severity": "fail",
+      "category": "Authentication",
+      "check": "H2 console security exposure",
+      "detail": "The H2 database console is enabled (spring.h2.console.enabled=true) and its endpoints (/h2-c...",
+      "rule_id": "auth_008"
+    },
+    {
+      "severity": "warn",
+      "category": "Authentication",
+      "check": "Deprecated API usage (WebSecurityConfigurerAdapter)",
+      "detail": "SpringSecurityConfig extends WebSecurityConfigurerAdapter, which was deprecated in Spring Se...",
+      "rule_id": "auth_009"
+    },
+    {
+      "severity": "fail",
+      "category": "Authentication",
+      "check": "Credential hardcoding / secrets management",
+      "detail": "Usernames and passwords ('user1'/'pwd1', 'user2'/'pwd2') are hardcoded directly in the Java ...",
+      "rule_id": "auth_010"
+    },
+    {
+      "severity": "fail",
+      "category": "Validation",
+      "check": "Bean validation usage (@Valid/@Validated on controller parameters)",
+      "detail": "The uploadMood endpoint accepts a Mood object as a method parameter (bound as a model attrib...",
+      "rule_id": "val_001"
+    },
+    {
+      "severity": "warn",
+      "category": "Validation",
+      "check": "Entity constraint annotations completeness",
+      "detail": "The Mood entity defines @NotNull, @Min, and @Max on latitude and longitude, which is a reaso...",
+      "rule_id": "val_002"
+    },
+    {
+      "severity": "fail",
+      "category": "Validation",
+      "check": "Service layer validation",
+      "detail": "MoodServiceImplementation.save() directly delegates to moodRepository.save(mood) with no val...",
+      "rule_id": "val_003"
+    },
+    {
+      "severity": "warn",
+      "category": "Validation",
+      "check": "Input sanitization (XSS, SQL injection)",
+      "detail": "There is no explicit input sanitization anywhere in the codebase. The 'person' field is popu...",
+      "rule_id": "val_004"
+    },
+    {
+      "severity": "fail",
+      "category": "Validation",
+      "check": "Enum validation handling",
+      "detail": "MoodStatus is accepted as a @RequestParam in the uploadMood endpoint. When a client supplies...",
+      "rule_id": "val_005"
+    },
+    {
+      "severity": "fail",
+      "category": "Validation",
+      "check": "@NotNull on primitive types (int vs Integer)",
+      "detail": "The Mood entity declares 'latitude' and 'longitude' as primitive 'int' fields, then annotate...",
+      "rule_id": "val_006"
+    },
+    {
+      "severity": "fail",
+      "category": "Validation",
+      "check": "Validation error response handling",
+      "detail": "There is no structured error response handling anywhere in the application. The uploadMood m...",
+      "rule_id": "val_007"
+    },
+    {
+      "severity": "warn",
+      "category": "Validation",
+      "check": "Custom validators",
+      "detail": "No custom validators (implementations of ConstraintValidator) are defined in the project. Wh...",
+      "rule_id": "val_008"
+    },
+    {
+      "severity": "fail",
+      "category": "Validation",
+      "check": "@Validated vs @Valid usage",
+      "detail": "@Validated and @Valid are used incorrectly in this application. In the uploadMood method, @V...",
+      "rule_id": "val_009"
+    },
+    {
+      "severity": "warn",
+      "category": "Validation",
+      "check": "Cross-field validation",
+      "detail": "No cross-field validation exists in the application. Latitude and longitude are validated in...",
+      "rule_id": "val_010"
+    },
+    {
+      "severity": "fail",
+      "category": "Error Handling",
+      "check": "Global exception handler",
+      "detail": "The project contains no @ControllerAdvice or @RestControllerAdvice class and no @ExceptionHa...",
+      "rule_id": "err_001"
+    },
+    {
+      "severity": "fail",
+      "category": "Error Handling",
+      "check": "Consistent error response format",
+      "detail": "There is no shared error response DTO (for example fields such as message, timestamp, path, ...",
+      "rule_id": "err_002"
+    },
+    {
+      "severity": "fail",
+      "category": "Error Handling",
+      "check": "Null return handling",
+      "detail": "getBestLocationFromCoordinate initializes result to null and returns it when no locations ex...",
+      "rule_id": "err_003"
+    },
+    {
+      "severity": "fail",
+      "category": "Error Handling",
+      "check": "void endpoint response",
+      "detail": "uploadMood is declared void and does not set an explicit HTTP status on the HttpServletRespo...",
+      "rule_id": "err_004"
+    },
+    {
+      "severity": "fail",
+      "category": "Error Handling",
+      "check": "No custom exceptions",
+      "detail": "No domain-specific exceptions (for example for missing moods or locations) appear anywhere i...",
+      "rule_id": "err_005"
+    },
+    {
+      "severity": "fail",
+      "category": "Error Handling",
+      "check": "Database error handling",
+      "detail": "MoodRepository extends CrudRepository and save flows through moodRepository.save in MoodServ...",
+      "rule_id": "err_006"
+    },
+    {
+      "severity": "fail",
+      "category": "Error Handling",
+      "check": "Inconsistent ResponseEntity usage",
+      "detail": "uploadMood returns void while getMoodDistribution and getHappyNearByLocations return Respons...",
+      "rule_id": "err_007"
+    },
+    {
+      "severity": "fail",
+      "category": "Error Handling",
+      "check": "Logging",
+      "detail": "There is no SLF4J Logger, @Slf4j, or LoggerFactory usage in MoodSenseController or MoodServi...",
+      "rule_id": "err_008"
+    },
+    {
+      "severity": "warn",
+      "category": "Error Handling",
+      "check": "Exception propagation",
+      "detail": "Service and repository methods do not declare checked exceptions, which is normal in Spring....",
+      "rule_id": "err_009"
+    },
+    {
+      "severity": "warn",
+      "category": "Error Handling",
+      "check": "HTTP 500 on unhandled exceptions",
+      "detail": "Without a @RestControllerAdvice, unhandled exceptions are handled by Spring Boot\u2019s default m...",
+      "rule_id": "err_010"
+    }
+  ]
+}

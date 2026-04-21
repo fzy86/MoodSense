@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Backend Assessment &mdash; Mood Sense Demo (2026-04-21 15:19)</title>
+  <style>
+    body { max-width: 940px; margin: 0 auto; padding: 2rem 2.5rem;
+           font-family: system-ui, -apple-system, sans-serif; line-height: 1.65; color: #1a1a1a; }
+    h1 { font-size: 1.85rem; margin-bottom: 0.2rem; }
+    h2 { font-size: 1.35rem; border-bottom: 2px solid #ddd; padding-bottom: 0.3rem; margin-top: 2.5rem; }
+    h3 { font-size: 1.05rem; margin-top: 1.4rem; color: #333; }
+    p  { margin: 0.5rem 0 0.75rem; }
+    hr { border: none; border-top: 1px solid #eee; margin: 2rem 0; }
+    .meta { color: #555; font-size: 0.9rem; margin-top: 0; }
+    a { color: #0566c7; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: 0.9rem; }
+    th { background: #f5f5f5; text-align: left; font-weight: 600; }
+    th, td { border: 1px solid #ddd; padding: 0.45rem 0.75rem; vertical-align: top; }
+    tr:nth-child(even) { background: #fafafa; }
+    /* severity */
+    .pass       { color: #0a6b0a; }
+    .critical   { color: #b00; font-weight: 600; }
+    .suggestion { color: #886600; }
+    .nice       { color: #666; }
+    /* findings list */
+    ul.findings { list-style: none; padding-left: 0; margin: 0.5rem 0 1rem; }
+    ul.findings > li { margin-bottom: 0.85rem; padding: 0.5rem 0.75rem;
+                       border-left: 4px solid #e0e0e0; background: #fafafa;
+                       border-radius: 0 4px 4px 0; }
+    ul.findings > li.critical   { border-left-color: #b00;    background: #fff5f5; }
+    ul.findings > li.suggestion { border-left-color: #886600; background: #fffdf0; }
+    ul.findings > li.nice       { border-left-color: #bbb;    background: #f8f8f8; }
+    ul.findings > li.pass       { border-left-color: #0a6b0a; background: #f5fbf5; }
+    /* nested file list */
+    .finding-files { font-size: 0.82rem; margin-top: 6px; list-style: none; padding-left: 1.2em; }
+    .finding-files li { margin: 2px 0; }
+    .finding-files code { background: #f0f0f0; padding: 1px 5px; border-radius: 3px; font-size: 0.8rem; }
+    /* overall band badges */
+    .band-fail { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 4px;
+                 background: #fce8e8; color: #b00; font-weight: 700; }
+    .band-pass { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 4px;
+                 background: #e8f5e8; color: #0a6b0a; font-weight: 700; }
+    .band-warn { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 4px;
+                 background: #fef9e7; color: #886600; font-weight: 700; }
+    /* coverage grid */
+    .coverage-grid { display: grid; grid-template-columns: 210px 1fr;
+                     gap: 0.35rem 1rem; margin: 0.5rem 0 1rem; }
+    .coverage-grid dt { font-weight: 600; color: #444; font-size: 0.9rem; }
+    .coverage-grid dd { margin: 0; font-size: 0.9rem; }
+    /* r-analysis bullets */
+    ul.r-bullets { list-style: none; padding-left: 0; }
+    ul.r-bullets > li { margin-bottom: 0.5rem; }
+    ul.r-bullets ul   { margin: 0.3rem 0 0 1.2rem; }
+    /* footer */
+    footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #ddd;
+             font-size: 0.82rem; color: #666; }
+</style>
+</head>
+<body>
+
+<h1>Backend Assessment &mdash; Mood Sense Demo</h1>
+<p class="meta">
+  <strong>Repository:</strong> Mood Sense Demo &bull;
+  <strong>Date:</strong> 2026-04-21 15:19 &bull;
+  <strong>Scope:</strong> Generic rules &sect;1&ndash;&sect;7 + Spring Boot-specific rules &sect;8 &bull;
+  <strong>Stack:</strong> Java/Spring Boot &bull;
+  <strong>Rules assessed:</strong> 42 total
+</p>
+
+<h2>Summary</h2>
+<ul>
+  <li><strong>Overall:</strong> <span class="band-fail">Fail &mdash; 26 / 100 (Critical)</span></li>
+  <li><strong>Critical:</strong> 25</li>
+  <li><strong>Suggestions:</strong> 15</li>
+  <li><strong>Nice-to-have:</strong> 0</li>
+  <li><strong>Pass / Pass (N/A):</strong> 2</li>
+</ul>
+
+<h2>Assessment coverage</h2>
+<dl class="coverage-grid">
+  <dt>Framework detected</dt><dd>Spring Boot 2.7 (Java 11), Spring Web, Spring Data JPA, Spring Security, H2</dd>
+  <dt>Modules scanned</dt><dd></dd>
+  <dt>Source files</dt><dd>13</dd>
+  <dt>Test files</dt><dd>N/A</dd>
+  <dt>Controllers (0)</dt><dd></dd>
+  <dt>Services</dt><dd>N/A service files</dd>
+  <dt>Repositories</dt><dd>N/A repositories</dd>
+  <dt>Entities / Documents</dt><dd>N/A</dd>
+  <dt>Messaging consumers</dt><dd>N/A</dd>
+  <dt>Schedulers</dt><dd>N/A</dd>
+  <dt>Global error handlers</dt><dd>N/A</dd>
+  <dt>Auth libraries</dt><dd>N/A</dd>
+</dl>
+
+<h2>R-Analysis methodology</h2>
+
+<h3>Retire</h3>
+<p>See per-skill Retire bullets in &sect;1&ndash;&sect;7.</p>
+
+<h3>Refactor</h3>
+<p>See per-skill Refactor bullets in &sect;1&ndash;&sect;7.</p>
+
+<h3>Rebuild</h3>
+<p>See per-skill Rebuild bullets in &sect;1&ndash;&sect;7.</p>
+
+<h3>Deliverable structure</h3>
+<table>
+<thead>
+<tr><th>Component</th><th>Type</th><th>Risk</th><th>Effort</th><th>Recommendation</th><th>Link</th></tr>
+</thead>
+<tbody>
+<tr><td>api-design</td><td>Backend</td><td>High</td><td>High</td><td>Refactor</td><td><a href="#component-api-design">&sect;1</a></td></tr>
+<tr><td>domain-structure</td><td>Backend</td><td>High</td><td>High</td><td>Refactor</td><td><a href="#component-domain-structure">&sect;2</a></td></tr>
+<tr><td>business-logic</td><td>Backend</td><td>High</td><td>High</td><td>Rebuild</td><td><a href="#component-business-logic">&sect;3</a></td></tr>
+<tr><td>data-access</td><td>Backend</td><td>High</td><td>High</td><td>Refactor</td><td><a href="#component-data-access">&sect;4</a></td></tr>
+<tr><td>authentication</td><td>Backend</td><td>High</td><td>High</td><td>Rebuild</td><td><a href="#component-authentication">&sect;5</a></td></tr>
+<tr><td>validation</td><td>Backend</td><td>High</td><td>High</td><td>Refactor</td><td><a href="#component-validation">&sect;6</a></td></tr>
+<tr><td>error-handling</td><td>Backend</td><td>High</td><td>High</td><td>Refactor</td><td><a href="#component-error-handling">&sect;7</a></td></tr>
+</tbody>
+</table>
+
+<h3 id="rationale">Detailed rationale</h3>
+<p>
+  Primary rationale lives in each section&apos;s R-Analysis block below.
+  The Deliverable table above rolls up Risk, Effort, and Recommendation
+  from the highest-impact finding per category.
+</p>
+
+<a id="component-api-design"></a>
+<h2 id="component-api-design">1. API Design</h2>
+<p><strong>Perspective:</strong> HTTP semantics, URI naming, response shapes, versioning, pagination, documentation, and error response format.</p>
+<p><strong>Rules:</strong> <code>.cursor/skills/backend-skills/references/generic/api-design.md</code></p>
+<ul class="findings">
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>RESTful URL naming (verbs vs nouns, reso.</strong> All three endpoints use verb-based n <em>Rule: api_001</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Response status codes (proper HTTP statu.</strong> The uploadMood POST endpoint returns <em>Rule: api_003</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>API versioning strategy.</strong> There is no API versioning strategy  <em>Rule: api_005</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Request/Response DTO usage (vs entity ex.</strong> JPA entities are directly exposed in <em>Rule: api_006</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>HTTP method usage (GET/POST/PUT/DELETE a.</strong> The HTTP methods used are partially  <em>Rule: api_002</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Content type / media type handling.</strong> No explicit 'produces' or 'consumes' <em>Rule: api_004</em>
+  </li>
+</ul>
+<h3>R-Analysis &mdash; api-design</h3>
+<ul class="r-bullets">
+  <li><strong>Retire:</strong> None identified.</li>
+  <li><strong>Refactor:</strong> <ul>
+    <li>HTTP method usage (GET/POST/PUT/DELETE a</li>
+    <li>Content type / media type handling</li>
+  </ul></li>
+  <li><strong>Rebuild:</strong> <ul>
+    <li>RESTful URL naming (verbs vs nouns, reso: All three endpoints use verb-based n</li>
+    <li>Response status codes (proper HTTP statu: The uploadMood POST endpoint returns</li>
+    <li>API versioning strategy: There is no API versioning strategy </li>
+    <li>Request/Response DTO usage (vs entity ex: JPA entities are directly exposed in</li>
+  </ul></li>
+</ul>
+<hr>
+
+<a id="component-domain-structure"></a>
+<h2 id="component-domain-structure">2. Domain Structure</h2>
+<p><strong>Perspective:</strong> Controller/service/repository separation, design patterns, module boundaries, dependency management, configuration, and startup behaviour.</p>
+<p><strong>Rules:</strong> <code>.cursor/skills/backend-skills/references/generic/domain-structure.md</code></p>
+<ul class="findings">
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Package naming convention.</strong> The persistence package is named `re <em>Rule: dom_001</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Entity design.</strong> JPA entities lack audit fields (`cre <em>Rule: dom_004</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>DTO separation.</strong> The REST controller accepts and muta <em>Rule: dom_006</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Domain model richness.</strong> Entities and enums are Lombok `@Data <em>Rule: dom_003</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Value objects.</strong> `Coordinate` is a Spring Data projec <em>Rule: dom_005</em>
+  </li>
+  <li class="pass">
+    <strong>Pass:</strong> Separation of concerns. The codebase uses distinct packages  <em>Rule: dom_002</em>
+  </li>
+</ul>
+<h3>R-Analysis &mdash; domain-structure</h3>
+<ul class="r-bullets">
+  <li><strong>Retire:</strong> None identified.</li>
+  <li><strong>Refactor:</strong> <ul>
+    <li>Domain model richness</li>
+    <li>Value objects</li>
+  </ul></li>
+  <li><strong>Rebuild:</strong> <ul>
+    <li>Package naming convention: The persistence package is named `re</li>
+    <li>Entity design: JPA entities lack audit fields (`cre</li>
+    <li>DTO separation: The REST controller accepts and muta</li>
+  </ul></li>
+</ul>
+<hr>
+
+<a id="component-business-logic"></a>
+<h2 id="component-business-logic">3. Business Logic</h2>
+<p><strong>Perspective:</strong> Transactional integrity, async messaging reliability, resilience patterns, maintainability, idempotency, and domain rule enforcement.</p>
+<p><strong>Rules:</strong> <code>.cursor/skills/backend-skills/references/generic/business-logic.md</code></p>
+<ul class="findings">
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Logic correctness.</strong> Nearest-location distance in getBest <em>Rule: biz_001</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Transaction management.</strong> MoodServiceImplementation.save deleg <em>Rule: biz_002</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Null safety.</strong> getHappyNearByLocations and getLocat <em>Rule: biz_004</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Performance - N+1 queries.</strong> getBestLocationFromCoordinate calls  <em>Rule: biz_005</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Service layer completeness.</strong> uploadMood in the controller assembl <em>Rule: biz_003</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Magic values.</strong> getAllHappyCoordinates uses the stri <em>Rule: biz_006</em>
+  </li>
+</ul>
+<h3>R-Analysis &mdash; business-logic</h3>
+<ul class="r-bullets">
+  <li><strong>Retire:</strong> None identified.</li>
+  <li><strong>Refactor:</strong> <ul>
+    <li>Service layer completeness</li>
+    <li>Magic values</li>
+  </ul></li>
+  <li><strong>Rebuild:</strong> <ul>
+    <li>Logic correctness: Nearest-location distance in getBest</li>
+    <li>Transaction management: MoodServiceImplementation.</li>
+    <li>Null safety: getHappyNearByLocations and getLocat</li>
+    <li>Performance - N+1 queries: getBestLocationFromCoordinate calls </li>
+  </ul></li>
+</ul>
+<hr>
+
+<a id="component-data-access"></a>
+<h2 id="component-data-access">4. Data Access</h2>
+<p><strong>Perspective:</strong> Repository patterns, transactional integrity, connection pooling, schema migrations, query efficiency, caching, and outbound integration performance.</p>
+<p><strong>Rules:</strong> <code>.cursor/skills/backend-skills/references/generic/data-access.md</code></p>
+<ul class="findings">
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Entity ID type consistency.</strong> Mood declares @Id @GeneratedValue on <em>Rule: da_002</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>N+1 query problem.</strong> getBestLocationFromCoordinate calls  <em>Rule: da_004</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Repository extends appropriate interface.</strong> MoodRepository extends CrudRepositor <em>Rule: da_001</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Use of production-grade database.</strong> application.properties configures jd <em>Rule: da_003</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Query hardcoded enum string.</strong> getAllHappyCoordinates uses JPQL wit <em>Rule: da_005</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Proper use of @Transactional.</strong> No @Transactional annotations appear <em>Rule: da_006</em>
+  </li>
+</ul>
+<h3>R-Analysis &mdash; data-access</h3>
+<ul class="r-bullets">
+  <li><strong>Retire:</strong> None identified.</li>
+  <li><strong>Refactor:</strong> <ul>
+    <li>Repository extends appropriate interface</li>
+    <li>Use of production-grade database</li>
+    <li>Query hardcoded enum string</li>
+    <li>Proper use of @Transactional</li>
+  </ul></li>
+  <li><strong>Rebuild:</strong> <ul>
+    <li>Entity ID type consistency: Mood declares @Id @GeneratedValue on</li>
+    <li>N+1 query problem: getBestLocationFromCoordinate calls </li>
+  </ul></li>
+</ul>
+<hr>
+
+<a id="component-authentication"></a>
+<h2 id="component-authentication">5. Authentication</h2>
+<p><strong>Perspective:</strong> Inbound request authentication, role/permission enforcement, session management, and outbound credential security.</p>
+<p><strong>Rules:</strong> <code>.cursor/skills/backend-skills/references/generic/authentication.md</code></p>
+<ul class="findings">
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>CSRF protection configuration.</strong> CSRF protection is globally disabled <em>Rule: auth_003</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>User management approach (in-memory vs d.</strong> User credentials are managed entirel <em>Rule: auth_005</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Authentication mechanism (HTTP Basic, JW.</strong> The application uses HTTP Basic auth <em>Rule: auth_001</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>CORS configuration.</strong> There is no CORS configuration anywh <em>Rule: auth_004</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Role-based access control.</strong> Role-based access control is present <em>Rule: auth_006</em>
+  </li>
+  <li class="pass">
+    <strong>Pass:</strong> Password storage security. Passwords are hashed using BCryptPas <em>Rule: auth_002</em>
+  </li>
+</ul>
+<h3>R-Analysis &mdash; authentication</h3>
+<ul class="r-bullets">
+  <li><strong>Retire:</strong> None identified.</li>
+  <li><strong>Refactor:</strong> <ul>
+    <li>Authentication mechanism (HTTP Basic, JW</li>
+    <li>CORS configuration</li>
+    <li>Role-based access control</li>
+  </ul></li>
+  <li><strong>Rebuild:</strong> <ul>
+    <li>CSRF protection configuration: CSRF protection is globally disabled</li>
+    <li>User management approach (in-memory vs d: User credentials are managed entirel</li>
+  </ul></li>
+</ul>
+<hr>
+
+<a id="component-validation"></a>
+<h2 id="component-validation">6. Validation</h2>
+<p><strong>Perspective:</strong> Input validation coverage, Bean Validation usage, schema strictness, content-type enforcement, size/bound constraints, and custom validators.</p>
+<p><strong>Rules:</strong> <code>.cursor/skills/backend-skills/references/generic/validation.md</code></p>
+<ul class="findings">
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Bean validation usage (@Valid/@Validated.</strong> The uploadMood endpoint accepts a Mo <em>Rule: val_001</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Service layer validation.</strong> MoodServiceImplementation.save() dir <em>Rule: val_003</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Enum validation handling.</strong> MoodStatus is accepted as a @Request <em>Rule: val_005</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>@NotNull on primitive types (int vs Inte.</strong> The Mood entity declares 'latitude'  <em>Rule: val_006</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Entity constraint annotations completene.</strong> The Mood entity defines @NotNull, @M <em>Rule: val_002</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Input sanitization (XSS, SQL injection).</strong> There is no explicit input sanitizat <em>Rule: val_004</em>
+  </li>
+</ul>
+<h3>R-Analysis &mdash; validation</h3>
+<ul class="r-bullets">
+  <li><strong>Retire:</strong> None identified.</li>
+  <li><strong>Refactor:</strong> <ul>
+    <li>Entity constraint annotations completene</li>
+    <li>Input sanitization (XSS, SQL injection)</li>
+  </ul></li>
+  <li><strong>Rebuild:</strong> <ul>
+    <li>Bean validation usage (@Valid/@Validated: The uploadMood endpoint accepts a Mo</li>
+    <li>Service layer validation: MoodServiceImplementation.</li>
+    <li>Enum validation handling: MoodStatus is accepted as a @Request</li>
+    <li>@NotNull on primitive types (int vs Inte: The Mood entity declares 'latitude' </li>
+  </ul></li>
+</ul>
+<hr>
+
+<a id="component-error-handling"></a>
+<h2 id="component-error-handling">7. Error Handling</h2>
+<p><strong>Perspective:</strong> Global exception mapping, error response consistency, graceful shutdown, async error handling, observability, and overload protection.</p>
+<p><strong>Rules:</strong> <code>.cursor/skills/backend-skills/references/generic/error-handling.md</code></p>
+<ul class="findings">
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Global exception handler.</strong> The project contains no @ControllerA <em>Rule: err_001</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Consistent error response format.</strong> There is no shared error response DT <em>Rule: err_002</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Null return handling.</strong> getBestLocationFromCoordinate initia <em>Rule: err_003</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>void endpoint response.</strong> uploadMood is declared void and does <em>Rule: err_004</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>No custom exceptions.</strong> No domain-specific exceptions (for e <em>Rule: err_005</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Database error handling.</strong> MoodRepository extends CrudRepositor <em>Rule: err_006</em>
+  </li>
+</ul>
+<h3>R-Analysis &mdash; error-handling</h3>
+<ul class="r-bullets">
+  <li><strong>Retire:</strong> None identified.</li>
+  <li><strong>Refactor:</strong> No warning-level findings.</li>
+  <li><strong>Rebuild:</strong> <ul>
+    <li>Global exception handler: The project contains no @ControllerA</li>
+    <li>Consistent error response format: There is no shared error response DT</li>
+    <li>Null return handling: getBestLocationFromCoordinate initia</li>
+    <li>void endpoint response: uploadMood is declared void and does</li>
+    <li>No custom exceptions: No domain-specific exceptions (for e</li>
+    <li>Database error handling: MoodRepository extends CrudRepositor</li>
+  </ul></li>
+</ul>
+<hr>
+
+
+
+
+
+<h2>Appendix: Checklist summary</h2>
+<table>
+<thead>
+<tr><th>Category</th><th>Pass</th><th>Critical</th><th>Suggestion</th><th>Nice-to-have</th></tr>
+</thead>
+<tbody>
+<tr><td>&sect;1 API Design</td><td>&mdash;</td><td>4</td><td>2</td><td>0</td></tr>
+<tr><td>&sect;2 Domain Structure</td><td>partial</td><td>3</td><td>2</td><td>0</td></tr>
+<tr><td>&sect;3 Business Logic</td><td>&mdash;</td><td>4</td><td>2</td><td>0</td></tr>
+<tr><td>&sect;4 Data Access</td><td>&mdash;</td><td>2</td><td>4</td><td>0</td></tr>
+<tr><td>&sect;5 Authentication</td><td>partial</td><td>2</td><td>3</td><td>0</td></tr>
+<tr><td>&sect;6 Validation</td><td>&mdash;</td><td>4</td><td>2</td><td>0</td></tr>
+<tr><td>&sect;7 Error Handling</td><td>&mdash;</td><td>6</td><td>0</td><td>0</td></tr>
+<tr style="font-weight:600; background:#f5f5f5;"><td>TOTAL (&sect;1&ndash;&sect;7 generic + &sect;8 Spring Boot)</td><td>&mdash;</td><td>25</td><td>15</td><td>0</td></tr>
+</tbody>
+</table>
+
+<footer>
+  <p>
+    <strong>Rules applied:</strong>
+    Generic: <code>.cursor/skills/backend-skills/references/generic/*.md</code> (7 categories).
+     Framework-specific: <code>.cursor/skills/backend-skills/references/java-springboot/*.md</code> &rarr; &sect;8.
+     <em>Security audit data not found. Run the secure-code-audit skill to include OWASP findings in this report.</em>
+    R-Analysis mapping:
+    <code>.cursor/skills/backend-r-report/assets/templates/r-analysis-deliverable-structure.md</code>.
+  </p>
+  <p>
+    Generated 2026-04-21 15:19 &bull;
+    Overall score: <strong>26 / 100
+    &mdash; Critical</strong> &bull;
+    Generated by <code>generate_report.py</code> (no LLM).
+  </p>
+</footer>
+
+</body>
+</html>
