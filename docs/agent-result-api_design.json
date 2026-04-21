@@ -1,0 +1,89 @@
+[
+  {
+    "rule_id": "api_001",
+    "check": "RESTful URL naming (verbs vs nouns, resource naming)",
+    "result": "fail",
+    "detail": "All three endpoints use verb-based naming which violates REST conventions. '/uploadMood' uses the verb 'upload' instead of a noun-based resource path like 'POST /moods'. '/getMoodDistribution' embeds the verb 'get' instead of using 'GET /moods/distribution' or 'GET /mood-distributions'. '/getHappyNearByLocations' similarly embeds 'get' and should be 'GET /locations?mood=HAPPY' or 'GET /locations/nearby'. Additionally, all URLs use camelCase (e.g., 'uploadMood', 'getMoodDistribution') instead of the REST convention of lowercase kebab-case (e.g., 'mood-distributions'). There is no resource hierarchy or nesting — all endpoints are flat at the root path with no common base path like '/api/moods'. The URLs read like RPC-style method names rather than RESTful resource identifiers.",
+    "files": ["src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"]
+  },
+  {
+    "rule_id": "api_002",
+    "check": "HTTP method usage (GET/POST/PUT/DELETE appropriateness)",
+    "result": "warn",
+    "detail": "The HTTP methods used are partially correct: POST is used for creating a mood entry ('/uploadMood') and GET is used for the two read-only query endpoints. However, the API is incomplete — there are no PUT or PATCH endpoints for updating an existing mood, and no DELETE endpoint for removing moods. This means the API does not support full CRUD operations on the Mood resource. Additionally, the controller uses the legacy '@RequestMapping(method = RequestMethod.POST)' syntax instead of the more modern and idiomatic '@PostMapping' and '@GetMapping' shortcut annotations available since Spring 4.3. While not technically incorrect, this makes intent less clear at a glance.",
+    "files": ["src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"]
+  },
+  {
+    "rule_id": "api_003",
+    "check": "Response status codes (proper HTTP status codes returned)",
+    "result": "fail",
+    "detail": "The uploadMood POST endpoint returns void, which defaults to HTTP 200 OK. For a resource creation operation, the correct status code is 201 Created, and ideally the response should include a Location header pointing to the newly created resource. The two GET endpoints always return 200 OK wrapped in ResponseEntity, but there is no handling for error cases: no 404 Not Found when data doesn't exist, no 400 Bad Request responses for invalid input, and no structured error response body. There is no @ControllerAdvice or @ExceptionHandler defined anywhere in the project for centralized exception handling, so validation failures (from @Validated) and other exceptions will produce Spring's default whitelabel error responses with inconsistent formats. The @Validated annotation on @RequestParam fields does not trigger Bean Validation without additional configuration (a @Validated annotation on the class level or a MethodValidationPostProcessor bean).",
+    "files": ["src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"]
+  },
+  {
+    "rule_id": "api_004",
+    "check": "Content type / media type handling",
+    "result": "warn",
+    "detail": "No explicit 'produces' or 'consumes' media type declarations are present on any @RequestMapping annotation. While Spring's @RestController defaults to 'application/json' via Jackson auto-configuration, best practice is to explicitly declare 'produces = MediaType.APPLICATION_JSON_VALUE' so the API contract is self-documenting and the server properly rejects requests with unsupported Accept headers. More critically, the uploadMood endpoint accepts its data as @RequestParam query/form parameters rather than a @RequestBody JSON payload. This means the POST endpoint effectively expects 'application/x-www-form-urlencoded' data rather than 'application/json', which is inconsistent with modern REST API conventions. The Mood object is bound as a form-backed model attribute (no @RequestBody annotation), further mixing form-based and REST paradigms.",
+    "files": ["src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"]
+  },
+  {
+    "rule_id": "api_005",
+    "check": "API versioning strategy",
+    "result": "fail",
+    "detail": "There is no API versioning strategy implemented. The endpoints are mounted directly at the root path (e.g., '/uploadMood') with no version prefix such as '/api/v1/moods'. No URI-based versioning ('/v1/...'), header-based versioning (custom 'X-API-Version' or Accept header with version media type), or query parameter-based versioning ('?version=1') is used. The application.properties file does not configure a 'server.servlet.context-path' that could serve as a base path. Without versioning, any breaking changes to the API contract will directly impact existing clients with no migration path. This is a significant concern for API evolution and maintainability.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java",
+      "pom.xml"
+    ]
+  },
+  {
+    "rule_id": "api_006",
+    "check": "Request/Response DTO usage (vs entity exposure)",
+    "result": "fail",
+    "detail": "JPA entities are directly exposed in both the request and response layers, violating the separation of concerns between the API contract and the persistence model. The uploadMood endpoint accepts the Mood @Entity directly as a form-backed model attribute, which exposes internal fields like 'id' (auto-generated) and 'person' (set from the authenticated user) to client manipulation. The getHappyNearByLocations endpoint returns List<Location> where Location is a JPA @Entity, leaking persistence annotations and structure to API consumers. While MoodDistribution is a Spring Data projection interface (not an entity), it is also not a proper DTO — it is tightly coupled to the repository query. No dedicated request DTOs (for input validation and transformation) or response DTOs (for controlling the API shape) exist anywhere in the project. This creates tight coupling between the database schema and the API contract, making independent evolution of either impossible.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java",
+      "src/main/java/com/example/moodsense/demo/model/Mood.java",
+      "src/main/java/com/example/moodsense/demo/model/Location.java",
+      "src/main/java/com/example/moodsense/demo/model/MoodDistribution.java"
+    ]
+  },
+  {
+    "rule_id": "api_007",
+    "check": "Pagination support for list endpoints",
+    "result": "fail",
+    "detail": "Neither of the two GET endpoints supports pagination. '/getMoodDistribution' returns a raw List<MoodDistribution> and '/getHappyNearByLocations' returns a raw List<Location> — both without any page, size, or sort parameters. The MoodRepository extends CrudRepository<Mood, String> instead of PagingAndSortingRepository or JpaRepository, so the repository layer also lacks built-in pagination support. For production use, unbounded list responses are a performance and scalability risk: as data grows, these endpoints will return increasingly large payloads with no way for clients to paginate or limit results. Spring Data's Pageable/Page abstractions are not used anywhere in the codebase.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java",
+      "src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java"
+    ]
+  },
+  {
+    "rule_id": "api_008",
+    "check": "HATEOAS / Hypermedia support",
+    "result": "fail",
+    "detail": "There is no HATEOAS or hypermedia support. The 'spring-boot-starter-hateoas' dependency is not included in pom.xml. No Spring HATEOAS classes are used — no EntityModel, CollectionModel, RepresentationModel, or WebMvcLinkBuilder references exist. API responses are plain JSON arrays/objects with no '_links' or '_embedded' sections. Clients must hardcode endpoint URLs rather than discovering them through hypermedia navigation. While HATEOAS is not always required (especially for simple internal APIs), its complete absence means the API achieves Level 2 on the Richardson Maturity Model at best and does not qualify as a fully RESTful API.",
+    "files": [
+      "pom.xml",
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "rule_id": "api_009",
+    "check": "API documentation (Swagger/OpenAPI)",
+    "result": "fail",
+    "detail": "There is no API documentation tooling configured. The pom.xml does not include 'springdoc-openapi-ui' (for OpenAPI 3.0) or 'springfox-swagger2'/'springfox-boot-starter' (for Swagger 2). No @Operation, @ApiResponse, @Parameter, @Schema, or @Tag annotations are present on any controller method or model class. There is no Swagger UI available, no OpenAPI specification endpoint ('/v3/api-docs' or '/swagger-ui.html'), and no static API documentation files. Without machine-readable API documentation, consumers must rely entirely on reading source code to understand the API contract, request/response formats, authentication requirements, and error scenarios.",
+    "files": [
+      "pom.xml",
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "rule_id": "api_010",
+    "check": "Consistent endpoint naming patterns",
+    "result": "fail",
+    "detail": "Endpoint naming is inconsistent across the three routes. '/uploadMood' uses 'upload' as its verb while '/getMoodDistribution' and '/getHappyNearByLocations' use 'get', showing inconsistent verb choice. The casing is inconsistent: 'NearBy' in '/getHappyNearByLocations' capitalizes 'By' while the rest uses standard camelCase. The naming granularity varies: 'uploadMood' is short and generic, 'getMoodDistribution' is medium-length, and 'getHappyNearByLocations' is long and encodes business logic (the 'Happy' filter) directly into the URL. There is no common base path grouping these endpoints under a shared resource prefix (e.g., '/api/moods'). The controller class itself lacks a @RequestMapping at the class level to establish a base path. A consistent pattern would use noun-based resources under a common prefix: 'POST /api/v1/moods', 'GET /api/v1/moods/distribution', 'GET /api/v1/locations/nearby?mood=HAPPY'.",
+    "files": ["src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"]
+  }
+]
