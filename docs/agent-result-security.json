@@ -1,0 +1,95 @@
+[
+  {
+    "rule_id": "sec_001",
+    "check": "CSRF protection",
+    "result": "fail",
+    "detail": "SpringSecurityConfig disables CSRF globally with .csrf().disable(). While common for stateless REST APIs, the application uses HTTP Basic with an in-memory user store and does not document why CSRF is unnecessary. If cookies or sessions are involved, this leaves the app open to cross-site request forgery attacks.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+    ]
+  },
+  {
+    "rule_id": "sec_002",
+    "check": "Hardcoded credentials",
+    "result": "fail",
+    "detail": "User credentials (user1/pwd1, user2/pwd2) are hardcoded in SpringSecurityConfig.inMemoryUserDetailsManager(). Credentials should never be embedded in source code; they should come from environment variables, a vault, or an external identity provider.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+    ]
+  },
+  {
+    "rule_id": "sec_003",
+    "check": "Deprecated security base class",
+    "result": "fail",
+    "detail": "SpringSecurityConfig extends WebSecurityConfigurerAdapter, which was deprecated in Spring Security 5.7 (the version shipped with Spring Boot 2.7.0). The recommended approach is component-based security configuration using SecurityFilterChain @Bean methods.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+    ]
+  },
+  {
+    "rule_id": "sec_004",
+    "check": "H2 console exposure",
+    "result": "fail",
+    "detail": "The H2 database console is enabled (spring.h2.console.enabled=true) and its paths are excluded from authentication (antMatchers('/h2-console/**').permitAll()). This gives unauthenticated access to the full database, including data modification and arbitrary SQL execution.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java",
+      "src/main/resources/application.properties"
+    ]
+  },
+  {
+    "rule_id": "sec_005",
+    "check": "Empty database password",
+    "result": "fail",
+    "detail": "application.properties sets spring.datasource.password to an empty string. Combined with the unauthenticated H2 console, anyone who reaches the console can access the database without credentials.",
+    "files": [
+      "src/main/resources/application.properties"
+    ]
+  },
+  {
+    "rule_id": "sec_006",
+    "check": "In-memory authentication store",
+    "result": "warn",
+    "detail": "InMemoryUserDetailsManager is used for user authentication. This is acceptable for demos but not for production as users cannot be managed dynamically, passwords cannot be rotated, and all state is lost on restart.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+    ]
+  },
+  {
+    "rule_id": "sec_007",
+    "check": "No rate limiting",
+    "result": "warn",
+    "detail": "No rate limiting or throttling is configured on any endpoint. The uploadMood POST and query endpoints can be abused with excessive requests, leading to denial of service or data flooding.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "rule_id": "sec_008",
+    "check": "No CORS configuration",
+    "result": "warn",
+    "detail": "No CORS configuration is defined. If front-end clients from different origins need to call the API, this will either block them (safe default) or require ad-hoc workarounds. An explicit CORS policy should be declared.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java",
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "rule_id": "sec_009",
+    "check": "No HTTPS enforcement",
+    "result": "warn",
+    "detail": "The application does not enforce HTTPS (no server.ssl.* properties, no requiresSecure() in the security config). HTTP Basic credentials are sent in cleartext over plain HTTP, making them trivially interceptable.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java",
+      "src/main/resources/application.properties"
+    ]
+  },
+  {
+    "rule_id": "sec_010",
+    "check": "Security headers",
+    "result": "warn",
+    "detail": "Only frameOptions().sameOrigin() is explicitly set (for the H2 console). Other security headers (Content-Security-Policy, X-Content-Type-Options, Strict-Transport-Security) rely on Spring Security defaults. These should be reviewed and hardened for production.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+    ]
+  }
+]

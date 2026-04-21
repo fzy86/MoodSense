@@ -1,0 +1,98 @@
+[
+  {
+    "rule_id": "api_001",
+    "check": "RESTful URL design",
+    "result": "fail",
+    "detail": "Endpoints use verb-based paths (/uploadMood, /getMoodDistribution, /getHappyNearByLocations) instead of resource-oriented nouns. RESTful convention would be POST /moods, GET /moods/distribution, GET /moods/nearby-happy-locations.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "rule_id": "api_002",
+    "check": "API versioning",
+    "result": "warn",
+    "detail": "No API versioning strategy is in place (no /api/v1 prefix, no Accept header versioning). Breaking changes to the contract would impact all clients simultaneously.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "rule_id": "api_003",
+    "check": "HTTP status codes",
+    "result": "fail",
+    "detail": "uploadMood returns void with an implicit 200 OK instead of 201 Created for a resource-creating POST. getMoodDistribution and getHappyNearByLocations hardcode HttpStatus.OK without considering empty results (204 No Content) or error cases (4xx/5xx).",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "rule_id": "api_004",
+    "check": "Consistent response wrapper",
+    "result": "fail",
+    "detail": "uploadMood returns void, while the two GET endpoints return ResponseEntity wrapping raw domain types. There is no consistent envelope structure (e.g. {data, errors, meta}) across the API.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "rule_id": "api_005",
+    "check": "Request/response DTOs",
+    "result": "fail",
+    "detail": "The controller directly accepts and returns JPA entities (Mood, Location) and JPA projection interfaces (MoodDistribution). This tightly couples the API contract to the persistence model, exposing internal field names and making independent evolution impossible.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java",
+      "src/main/java/com/example/moodsense/demo/model/Mood.java",
+      "src/main/java/com/example/moodsense/demo/model/Location.java"
+    ]
+  },
+  {
+    "rule_id": "api_006",
+    "check": "Use of modern annotations",
+    "result": "warn",
+    "detail": "@RequestMapping(value=..., method=RequestMethod.POST) is used instead of the more concise and readable @PostMapping and @GetMapping shortcut annotations available since Spring 4.3.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "rule_id": "api_007",
+    "check": "API documentation",
+    "result": "fail",
+    "detail": "No OpenAPI/Swagger dependency (springdoc-openapi or springfox) is present. The API has no machine-readable contract, making client code generation and API exploration impossible.",
+    "files": [
+      "pom.xml",
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "rule_id": "api_008",
+    "check": "Pagination support",
+    "result": "warn",
+    "detail": "getHappyNearByLocations and getMoodDistribution return unbounded lists without pagination parameters (page, size). As data grows, these endpoints will return increasingly large payloads with no way for clients to control response size.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java",
+      "src/main/java/com/example/moodsense/demo/service/MoodService.java"
+    ]
+  },
+  {
+    "rule_id": "api_009",
+    "check": "Input binding model",
+    "result": "fail",
+    "detail": "uploadMood accepts Mood as a form-binding model object alongside individual @RequestParam fields for the same entity attributes (latitude, longitude, moodStatus), then overwrites those fields on the mood object. This dual-binding is confusing and error-prone; a dedicated request DTO with @RequestBody would be clearer.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "rule_id": "api_010",
+    "check": "Coordinate precision",
+    "result": "warn",
+    "detail": "Latitude and longitude are represented as int in both Mood and Location entities. Real-world coordinates require floating-point precision (double or BigDecimal). Integer coordinates limit this to a coarse grid, though the README indicates this is by demo design.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/model/Mood.java",
+      "src/main/java/com/example/moodsense/demo/model/Location.java",
+      "src/main/java/com/example/moodsense/demo/model/Coordinate.java"
+    ]
+  }
+]

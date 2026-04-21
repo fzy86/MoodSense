@@ -1,0 +1,96 @@
+[
+  {
+    "rule_id": "test_001",
+    "check": "Test coverage breadth",
+    "result": "fail",
+    "detail": "Only MoodServiceImplementation has unit tests (4 test methods). There are no tests for MoodSenseController, SpringSecurityConfig, or any integration tests that exercise the full HTTP stack. The context-load test in DemoApplicationTests is effectively a no-op.",
+    "files": [
+      "src/test/java/com/example/moodsense/demo/service/MoodServiceImplementationTest.java",
+      "src/test/java/com/example/moodsense/demo/DemoApplicationTests.java"
+    ]
+  },
+  {
+    "rule_id": "test_002",
+    "check": "Controller tests",
+    "result": "fail",
+    "detail": "No @WebMvcTest or MockMvc-based tests exist for MoodSenseController. Request validation, authentication enforcement, response status codes, and content type negotiation are not verified by any test.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "rule_id": "test_003",
+    "check": "Security tests",
+    "result": "fail",
+    "detail": "spring-security-test is declared in pom.xml but never used. No tests verify that unauthenticated requests are rejected, that role-based access works, or that the H2 console permit rule functions as intended.",
+    "files": [
+      "pom.xml",
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+    ]
+  },
+  {
+    "rule_id": "test_004",
+    "check": "Edge case and null handling tests",
+    "result": "fail",
+    "detail": "Tests only cover the happy path with non-empty valid data. There are no tests for null remoteUser, empty coordinate lists returning null locations, or boundary latitude/longitude values (e.g. -10, 10).",
+    "files": [
+      "src/test/java/com/example/moodsense/demo/service/MoodServiceImplementationTest.java"
+    ]
+  },
+  {
+    "rule_id": "test_005",
+    "check": "Bug detection via tests",
+    "result": "fail",
+    "detail": "The distance calculation bug in getBestLocationFromCoordinate (uses location.getLatitude() instead of location.getLongitude() in the second term) is not caught by any test. testGetBestLocationFromCoordinate uses coordinate (1,1) against home (1,1) which trivially returns home regardless of the bug because the distance is 0.",
+    "files": [
+      "src/test/java/com/example/moodsense/demo/service/MoodServiceImplementationTest.java",
+      "src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java"
+    ]
+  },
+  {
+    "rule_id": "test_006",
+    "check": "Repository query tests",
+    "result": "fail",
+    "detail": "No @DataJpaTest or similar tests verify that the JPQL queries in MoodRepository (getMoodDistribution, getAllHappyCoordinates, getAllLocations) return correct results against actual data. Query correctness relies solely on manual testing.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java"
+    ]
+  },
+  {
+    "rule_id": "test_007",
+    "check": "Negative and validation tests",
+    "result": "fail",
+    "detail": "No tests verify that invalid input (for example MoodStatus not in the enum, latitude/longitude outside [-10,10]) is rejected by the validation annotations on the Mood entity or by the controller's @Validated parameters.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/model/Mood.java",
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "rule_id": "test_008",
+    "check": "Test isolation",
+    "result": "pass",
+    "detail": "The existing service tests use @ExtendWith(SpringExtension.class) with @MockBean for the repository and @ContextConfiguration limited to MoodServiceImplementation. This provides good isolation from the database and other components.",
+    "files": [
+      "src/test/java/com/example/moodsense/demo/service/MoodServiceImplementationTest.java"
+    ]
+  },
+  {
+    "rule_id": "test_009",
+    "check": "Test assertions quality",
+    "result": "warn",
+    "detail": "testSave asserts on the input object's fields after calling save, which does not verify that the repository received the correct values (the mock returns a different Mood). The assertion confirms the input is unchanged, not the persistence behavior.",
+    "files": [
+      "src/test/java/com/example/moodsense/demo/service/MoodServiceImplementationTest.java"
+    ]
+  },
+  {
+    "rule_id": "test_010",
+    "check": "Test naming and documentation",
+    "result": "warn",
+    "detail": "Test method names (testGetMoodDistribution, testSave) are generic and do not describe the scenario or expected outcome. BDD-style or descriptive names (e.g. shouldReturnEmptyListWhenNoMoodsExist) would improve readability and serve as documentation.",
+    "files": [
+      "src/test/java/com/example/moodsense/demo/service/MoodServiceImplementationTest.java"
+    ]
+  }
+]

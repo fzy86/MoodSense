@@ -1,0 +1,41 @@
+{
+  "generated": "2026-04-21",
+  "project": "moodsense",
+  "app_folder": "/workspace",
+  "backend": "Spring Boot 2.7.0 / Java 11",
+  "reference_summary": "Spring Boot backend (7 categories, 70 rules)",
+  "scores": {
+    "api_design": {
+      "score": 0,
+      "max": 10
+    },
+    "domain_structure": {
+      "score": 2,
+      "max": 10
+    },
+    "business_logic": {
+      "score": 0,
+      "max": 10
+    },
+    "data_access": {
+      "score": 1,
+      "max": 10
+    },
+    "error_handling": {
+      "score": 0,
+      "max": 10
+    },
+    "security": {
+      "score": 0,
+      "max": 10
+    },
+    "testing": {
+      "score": 0,
+      "max": 10
+    },
+    "total": 3,
+    "max": 70,
+    "overall_pct": 4,
+    "band": "Critical"
+  }
+}

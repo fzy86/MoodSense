@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>R-Analysis Report &mdash; MoodSense Backend</title>
+<style>
+  :root {
+    --c-bg: #f8f9fa; --c-card: #fff; --c-border: #dee2e6;
+    --c-fail: #dc3545; --c-warn: #fd7e14; --c-pass: #28a745;
+    --c-retire: #dc3545; --c-refactor: #fd7e14; --c-rebuild: #6f42c1;
+    --c-text: #212529; --c-muted: #6c757d;
+    --shadow: 0 1px 3px rgba(0,0,0,.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--c-bg); color: var(--c-text); line-height: 1.6; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+  h1 { font-size: 2rem; margin-bottom: .25rem; }
+  .subtitle { color: var(--c-muted); font-size: 1rem; margin-bottom: 2rem; }
+  .badge { display: inline-block; padding: .15rem .5rem; border-radius: 4px; font-size: .8rem; font-weight: 600; color: #fff; }
+  .badge-fail { background: var(--c-fail); }
+  .badge-warn { background: var(--c-warn); }
+  .badge-pass { background: var(--c-pass); }
+  .badge-retire { background: var(--c-retire); }
+  .badge-refactor { background: var(--c-refactor); }
+  .badge-rebuild { background: var(--c-rebuild); }
+
+  /* Summary cards */
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+  .card { background: var(--c-card); border: 1px solid var(--c-border); border-radius: 8px; padding: 1.25rem; box-shadow: var(--shadow); }
+  .card h3 { font-size: .85rem; text-transform: uppercase; letter-spacing: .05em; color: var(--c-muted); margin-bottom: .5rem; }
+  .card .big { font-size: 2.5rem; font-weight: 700; }
+  .card .big.critical { color: var(--c-fail); }
+
+  /* Gauge */
+  .gauge-wrap { text-align: center; margin-bottom: 2rem; }
+  .gauge-svg { width: 200px; height: 120px; }
+  .gauge-label { font-size: 2.2rem; font-weight: 700; }
+  .gauge-sub { color: var(--c-muted); font-size: .9rem; }
+
+  /* Score bars */
+  .score-section { margin-bottom: 2rem; }
+  .score-row { display: flex; align-items: center; gap: .75rem; margin-bottom: .5rem; }
+  .score-row .label { width: 160px; font-size: .9rem; font-weight: 500; text-align: right; }
+  .bar-bg { flex: 1; height: 22px; background: #e9ecef; border-radius: 4px; overflow: hidden; position: relative; }
+  .bar-fill { height: 100%; border-radius: 4px; transition: width .4s ease; }
+  .bar-fill.low { background: var(--c-fail); }
+  .bar-fill.mid { background: var(--c-warn); }
+  .bar-fill.high { background: var(--c-pass); }
+  .score-row .val { width: 60px; font-size: .9rem; font-weight: 600; }
+
+  /* Findings table */
+  .findings { width: 100%; border-collapse: collapse; margin-bottom: 2rem; }
+  .findings th, .findings td { padding: .6rem .8rem; text-align: left; border-bottom: 1px solid var(--c-border); font-size: .9rem; }
+  .findings th { background: #f1f3f5; font-weight: 600; position: sticky; top: 0; }
+  .findings tr:hover { background: #f8f9fa; }
+
+  /* R-Analysis */
+  .r-section { margin-bottom: 2.5rem; }
+  .r-section h2 { font-size: 1.4rem; margin-bottom: 1rem; padding-bottom: .5rem; border-bottom: 2px solid var(--c-border); }
+  .r-card { background: var(--c-card); border: 1px solid var(--c-border); border-radius: 8px; padding: 1.25rem; margin-bottom: 1rem; box-shadow: var(--shadow); border-left: 4px solid; }
+  .r-card.retire { border-left-color: var(--c-retire); }
+  .r-card.refactor { border-left-color: var(--c-refactor); }
+  .r-card.rebuild { border-left-color: var(--c-rebuild); }
+  .r-card h4 { font-size: 1rem; margin-bottom: .35rem; }
+  .r-card p { color: var(--c-muted); font-size: .9rem; margin-bottom: .35rem; }
+  .r-card .files { font-size: .8rem; color: #495057; font-family: 'SFMono-Regular', Consolas, monospace; }
+  .r-card .rationale { margin-top: .5rem; font-size: .88rem; color: var(--c-text); }
+
+  .tech-stack { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 2rem; }
+  .tech-tag { background: #e9ecef; padding: .25rem .7rem; border-radius: 20px; font-size: .85rem; font-weight: 500; }
+
+  footer { text-align: center; color: var(--c-muted); font-size: .8rem; padding: 2rem 0; border-top: 1px solid var(--c-border); }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>R-Analysis Report</h1>
+  <p class="subtitle">MoodSense Backend &mdash; Generated 2026-04-21</p>
+
+  <div class="tech-stack">
+    <span class="tech-tag">Java 11</span>
+    <span class="tech-tag">Spring Boot 2.7.0</span>
+    <span class="tech-tag">Maven</span>
+    <span class="tech-tag">H2 (in-memory)</span>
+    <span class="tech-tag">Spring Data JPA</span>
+    <span class="tech-tag">Spring Security</span>
+    <span class="tech-tag">JUnit 5 / Mockito</span>
+  </div>
+
+  <!-- Overall Score -->
+  <div class="gauge-wrap">
+    <svg class="gauge-svg" viewBox="0 0 200 120">
+      <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="#e9ecef" stroke-width="14" stroke-linecap="round"/>
+      <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="#dc3545" stroke-width="14" stroke-linecap="round"
+            stroke-dasharray="251.3" stroke-dashoffset="241"/>
+    </svg>
+    <div class="gauge-label critical">4%</div>
+    <div class="gauge-sub">Overall Score: 3 / 70 &mdash; <span class="badge badge-fail">CRITICAL</span></div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="summary-grid">
+    <div class="card">
+      <h3>Total Checks</h3>
+      <div class="big">70</div>
+    </div>
+    <div class="card">
+      <h3>Failed</h3>
+      <div class="big critical">37</div>
+    </div>
+    <div class="card">
+      <h3>Warnings</h3>
+      <div class="big" style="color:var(--c-warn)">26</div>
+    </div>
+    <div class="card">
+      <h3>Passed</h3>
+      <div class="big" style="color:var(--c-pass)">7</div>
+    </div>
+  </div>
+
+  <!-- Category Scores -->
+  <div class="score-section card">
+    <h3 style="margin-bottom:1rem;">Category Breakdown</h3>
+    <div class="score-row"><span class="label">API Design</span><div class="bar-bg"><div class="bar-fill low" style="width:0%"></div></div><span class="val">0/10</span></div>
+    <div class="score-row"><span class="label">Business Logic</span><div class="bar-bg"><div class="bar-fill low" style="width:0%"></div></div><span class="val">0/10</span></div>
+    <div class="score-row"><span class="label">Error Handling</span><div class="bar-bg"><div class="bar-fill low" style="width:0%"></div></div><span class="val">0/10</span></div>
+    <div class="score-row"><span class="label">Security</span><div class="bar-bg"><div class="bar-fill low" style="width:0%"></div></div><span class="val">0/10</span></div>
+    <div class="score-row"><span class="label">Testing</span><div class="bar-bg"><div class="bar-fill low" style="width:0%"></div></div><span class="val">0/10</span></div>
+    <div class="score-row"><span class="label">Data Access</span><div class="bar-bg"><div class="bar-fill low" style="width:10%"></div></div><span class="val">1/10</span></div>
+    <div class="score-row"><span class="label">Domain Structure</span><div class="bar-bg"><div class="bar-fill low" style="width:20%"></div></div><span class="val">2/10</span></div>
+  </div>
+
+  <!-- R-Analysis: Retire, Refactor, Rebuild -->
+  <div class="r-section">
+    <h2><span class="badge badge-retire">RETIRE</span> &nbsp;Components to Retire</h2>
+    <p style="color:var(--c-muted);margin-bottom:1rem;">These components use deprecated APIs, contain critical bugs, or present security vulnerabilities that make them unsuitable to keep as-is.</p>
+
+    <div class="r-card retire">
+      <h4>SpringSecurityConfig &mdash; WebSecurityConfigurerAdapter</h4>
+      <p class="files">src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java</p>
+      <div class="rationale">
+        <strong>Why retire:</strong> Extends the deprecated <code>WebSecurityConfigurerAdapter</code> (removed in Spring Security 6). Contains hardcoded credentials (user1/pwd1, user2/pwd2), disables CSRF globally, and exposes the H2 console without authentication. The entire class should be replaced with a modern <code>SecurityFilterChain</code> @Bean approach, externalizing credentials and removing H2 console access in non-dev profiles.
+      </div>
+    </div>
+
+    <div class="r-card retire">
+      <h4>Distance Calculation in getBestLocationFromCoordinate</h4>
+      <p class="files">src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java (lines 43-45)</p>
+      <div class="rationale">
+        <strong>Why retire:</strong> The Euclidean distance formula contains a confirmed bug &mdash; the second squared term uses <code>location.getLatitude()</code> instead of <code>location.getLongitude()</code>. This produces incorrect nearest-location results. The buggy logic must be discarded and rewritten with the correct formula, ideally extracted into a dedicated spatial utility.
+      </div>
+    </div>
+
+    <div class="r-card retire">
+      <h4>CrudRepository&lt;Mood, String&gt; ID Type</h4>
+      <p class="files">src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</p>
+      <div class="rationale">
+        <strong>Why retire:</strong> The repository declares <code>CrudRepository&lt;Mood, String&gt;</code> while the entity <code>Mood</code> uses <code>@Id private int id</code>. This type mismatch is fundamentally broken for any ID-based operations (findById, deleteById). Must be changed to <code>JpaRepository&lt;Mood, Integer&gt;</code>.
+      </div>
+    </div>
+
+    <div class="r-card retire">
+      <h4>Package "repositary" (misspelling)</h4>
+      <p class="files">src/main/java/com/example/moodsense/demo/repositary/</p>
+      <div class="rationale">
+        <strong>Why retire:</strong> The package name is misspelled. It should be renamed to <code>repository</code> along with all import statements referencing it.
+      </div>
+    </div>
+  </div>
+
+  <div class="r-section">
+    <h2><span class="badge badge-refactor">REFACTOR</span> &nbsp;Components to Refactor</h2>
+    <p style="color:var(--c-muted);margin-bottom:1rem;">These components have the right intent but need structural improvement to meet production quality standards.</p>
+
+    <div class="r-card refactor">
+      <h4>MoodSenseController &mdash; API Design</h4>
+      <p class="files">src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</p>
+      <div class="rationale">
+        <strong>What to refactor:</strong>
+        <ul style="margin:.5rem 0 0 1.2rem;font-size:.88rem;">
+          <li>Rename endpoints to RESTful noun-based paths: <code>POST /api/v1/moods</code>, <code>GET /api/v1/moods/distribution</code>, <code>GET /api/v1/moods/nearby-locations</code></li>
+          <li>Replace <code>@RequestMapping</code> with <code>@PostMapping</code> / <code>@GetMapping</code></li>
+          <li>Return <code>ResponseEntity&lt;?&gt;</code> consistently with proper HTTP status codes (201 for POST)</li>
+          <li>Introduce request/response DTOs instead of using JPA entities directly</li>
+          <li>Add a consistent response envelope structure</li>
+          <li>Move entity assembly logic from controller to service layer</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="r-card refactor">
+      <h4>MoodServiceImplementation &mdash; N+1 Queries &amp; Null Safety</h4>
+      <p class="files">src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</p>
+      <div class="rationale">
+        <strong>What to refactor:</strong>
+        <ul style="margin:.5rem 0 0 1.2rem;font-size:.88rem;">
+          <li>Load locations once before the coordinate loop, not inside <code>getBestLocationFromCoordinate</code></li>
+          <li>Filter null results from <code>getBestLocationFromCoordinate</code> before adding to list</li>
+          <li>Change <code>getLocationsFromCoordinates</code> and <code>getBestLocationFromCoordinate</code> to private</li>
+          <li>Add <code>@Transactional</code> on the save method and <code>@Transactional(readOnly=true)</code> on reads</li>
+          <li>Consider extracting spatial distance logic into a separate utility class</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="r-card refactor">
+      <h4>Entity Design &mdash; Mood &amp; Location</h4>
+      <p class="files">src/main/java/com/example/moodsense/demo/model/Mood.java, Location.java</p>
+      <div class="rationale">
+        <strong>What to refactor:</strong>
+        <ul style="margin:.5rem 0 0 1.2rem;font-size:.88rem;">
+          <li>Replace Lombok <code>@Data</code> on JPA entities with <code>@Getter</code>/<code>@Setter</code> and explicit <code>equals</code>/<code>hashCode</code></li>
+          <li>Add <code>createdAt</code> / <code>updatedAt</code> audit fields</li>
+          <li>Change <code>Mood.id</code> from primitive <code>int</code> to <code>Integer</code> for proper null semantics on new entities</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="r-card refactor">
+      <h4>MoodRepository &mdash; Queries</h4>
+      <p class="files">src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</p>
+      <div class="rationale">
+        <strong>What to refactor:</strong>
+        <ul style="margin:.5rem 0 0 1.2rem;font-size:.88rem;">
+          <li>Replace hardcoded <code>'HAPPY'</code> string with a bind parameter <code>:status</code></li>
+          <li>Extend <code>JpaRepository&lt;Mood, Integer&gt;</code> instead of <code>CrudRepository&lt;Mood, String&gt;</code></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="r-card refactor">
+      <h4>Application Configuration</h4>
+      <p class="files">src/main/resources/application.properties, pom.xml</p>
+      <div class="rationale">
+        <strong>What to refactor:</strong>
+        <ul style="margin:.5rem 0 0 1.2rem;font-size:.88rem;">
+          <li>Use Spring profiles to separate dev (H2) from production (PostgreSQL/MySQL) configs</li>
+          <li>Add Flyway or Liquibase for versioned database migrations</li>
+          <li>Configure HikariCP pool settings for production</li>
+          <li>Disable H2 console in non-dev profiles</li>
+          <li>Add springdoc-openapi for API documentation</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="r-section">
+    <h2><span class="badge badge-rebuild">REBUILD</span> &nbsp;Components to Build from Scratch</h2>
+    <p style="color:var(--c-muted);margin-bottom:1rem;">These capabilities are entirely absent and need to be designed and implemented.</p>
+
+    <div class="r-card rebuild">
+      <h4>Global Exception Handling &amp; Error Response Framework</h4>
+      <div class="rationale">
+        <strong>What to build:</strong>
+        <ul style="margin:.5rem 0 0 1.2rem;font-size:.88rem;">
+          <li>Create a <code>@RestControllerAdvice</code> global exception handler</li>
+          <li>Design a standard error response DTO with fields: message, timestamp, path, status, errors[]</li>
+          <li>Create domain-specific exceptions (e.g. <code>MoodNotFoundException</code>, <code>LocationNotFoundException</code>)</li>
+          <li>Map Spring Data / JPA exceptions to controlled API error responses</li>
+          <li>Ensure no stack traces leak to clients in production</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="r-card rebuild">
+      <h4>Logging Infrastructure</h4>
+      <div class="rationale">
+        <strong>What to build:</strong>
+        <ul style="margin:.5rem 0 0 1.2rem;font-size:.88rem;">
+          <li>Add <code>@Slf4j</code> logging to all controller and service classes</li>
+          <li>Log incoming requests, business operations, and errors</li>
+          <li>Configure structured logging for production (JSON format)</li>
+          <li>Add MDC context (request ID, user) for traceability</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="r-card rebuild">
+      <h4>Test Suite &mdash; Comprehensive Coverage</h4>
+      <div class="rationale">
+        <strong>What to build:</strong>
+        <ul style="margin:.5rem 0 0 1.2rem;font-size:.88rem;">
+          <li>Controller tests with <code>@WebMvcTest</code> and <code>MockMvc</code> covering all 3 endpoints</li>
+          <li>Security tests using <code>spring-security-test</code> to verify auth enforcement</li>
+          <li>Repository tests with <code>@DataJpaTest</code> to verify JPQL query correctness</li>
+          <li>Edge-case tests: null inputs, empty lists, boundary values, invalid enum values</li>
+          <li>A test that specifically catches the distance calculation bug</li>
+          <li>Integration tests exercising the full HTTP stack end-to-end</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="r-card rebuild">
+      <h4>Production Security Configuration</h4>
+      <div class="rationale">
+        <strong>What to build:</strong>
+        <ul style="margin:.5rem 0 0 1.2rem;font-size:.88rem;">
+          <li>Modern <code>SecurityFilterChain</code> bean-based configuration</li>
+          <li>Externalized credentials via environment variables or secrets manager</li>
+          <li>Database-backed user store or OAuth2/OIDC integration</li>
+          <li>Proper CSRF policy (enable for browser clients, disable only for stateless API)</li>
+          <li>CORS configuration with explicit allowed origins</li>
+          <li>HTTPS enforcement and security headers hardening</li>
+          <li>Rate limiting for API endpoints</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="r-card rebuild">
+      <h4>API Documentation</h4>
+      <div class="rationale">
+        <strong>What to build:</strong>
+        <ul style="margin:.5rem 0 0 1.2rem;font-size:.88rem;">
+          <li>Add <code>springdoc-openapi-ui</code> dependency</li>
+          <li>Annotate controllers with OpenAPI annotations</li>
+          <li>Provide Swagger UI at <code>/swagger-ui.html</code></li>
+          <li>Generate OpenAPI 3.0 specification for client code generation</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detailed Findings Table -->
+  <div class="r-section">
+    <h2>Detailed Findings (All 70 Checks)</h2>
+    <table class="findings">
+      <thead>
+        <tr><th>Rule</th><th>Category</th><th>Check</th><th>Result</th><th>Detail</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>biz_001</td><td>Business Logic</td><td>Logic correctness</td><td><span class="badge badge-fail">FAIL</span></td><td>Distance calculation bug: uses latitude instead of longitude in second term</td></tr>
+        <tr><td>biz_002</td><td>Business Logic</td><td>Transaction management</td><td><span class="badge badge-fail">FAIL</span></td><td>No @Transactional on service save method</td></tr>
+        <tr><td>biz_003</td><td>Business Logic</td><td>Service layer completeness</td><td><span class="badge badge-warn">WARN</span></td><td>Controller assembles entity instead of delegating to service</td></tr>
+        <tr><td>biz_004</td><td>Business Logic</td><td>Null safety</td><td><span class="badge badge-fail">FAIL</span></td><td>Null locations added to result list without null check</td></tr>
+        <tr><td>biz_005</td><td>Business Logic</td><td>Performance - N+1 queries</td><td><span class="badge badge-fail">FAIL</span></td><td>getAllLocations() called inside loop per coordinate</td></tr>
+        <tr><td>biz_006</td><td>Business Logic</td><td>Magic values</td><td><span class="badge badge-warn">WARN</span></td><td>Hardcoded 'HAPPY' string in JPQL</td></tr>
+        <tr><td>biz_007</td><td>Business Logic</td><td>Immutability and side-effects</td><td><span class="badge badge-warn">WARN</span></td><td>Read method triggers repeated repository reads</td></tr>
+        <tr><td>biz_008</td><td>Business Logic</td><td>Method visibility</td><td><span class="badge badge-fail">FAIL</span></td><td>Internal helper methods are public</td></tr>
+        <tr><td>biz_009</td><td>Business Logic</td><td>Repository ID type mismatch</td><td><span class="badge badge-fail">FAIL</span></td><td>CrudRepository&lt;Mood, String&gt; vs @Id int</td></tr>
+        <tr><td>biz_010</td><td>Business Logic</td><td>Input sanitization</td><td><span class="badge badge-warn">WARN</span></td><td>Incomplete validation on controller method</td></tr>
+
+        <tr><td>da_001</td><td>Data Access</td><td>Repository interface</td><td><span class="badge badge-warn">WARN</span></td><td>CrudRepository instead of JpaRepository</td></tr>
+        <tr><td>da_002</td><td>Data Access</td><td>Entity ID type consistency</td><td><span class="badge badge-fail">FAIL</span></td><td>Repository ID generic String ≠ entity int</td></tr>
+        <tr><td>da_003</td><td>Data Access</td><td>Production-grade database</td><td><span class="badge badge-warn">WARN</span></td><td>In-memory H2 not suitable for production</td></tr>
+        <tr><td>da_004</td><td>Data Access</td><td>N+1 query problem</td><td><span class="badge badge-fail">FAIL</span></td><td>Repeated identical reads in loop</td></tr>
+        <tr><td>da_005</td><td>Data Access</td><td>Query hardcoded enum</td><td><span class="badge badge-warn">WARN</span></td><td>Literal 'HAPPY' in JPQL</td></tr>
+        <tr><td>da_006</td><td>Data Access</td><td>@Transactional usage</td><td><span class="badge badge-warn">WARN</span></td><td>No @Transactional on service layer</td></tr>
+        <tr><td>da_007</td><td>Data Access</td><td>Fetch strategy</td><td><span class="badge badge-pass">PASS</span></td><td>No associations needing fetch config</td></tr>
+        <tr><td>da_008</td><td>Data Access</td><td>Database migration tool</td><td><span class="badge badge-warn">WARN</span></td><td>No Flyway or Liquibase</td></tr>
+        <tr><td>da_009</td><td>Data Access</td><td>Connection pool config</td><td><span class="badge badge-warn">WARN</span></td><td>No explicit HikariCP settings</td></tr>
+        <tr><td>da_010</td><td>Data Access</td><td>Repository naming</td><td><span class="badge badge-warn">WARN</span></td><td>Package misspelled as 'repositary'</td></tr>
+
+        <tr><td>dom_001</td><td>Domain Structure</td><td>Package naming</td><td><span class="badge badge-fail">FAIL</span></td><td>Package named 'repositary' instead of 'repository'</td></tr>
+        <tr><td>dom_002</td><td>Domain Structure</td><td>Separation of concerns</td><td><span class="badge badge-pass">PASS</span></td><td>Distinct packages for controller, service, model</td></tr>
+        <tr><td>dom_003</td><td>Domain Structure</td><td>Domain model richness</td><td><span class="badge badge-warn">WARN</span></td><td>Anemic data carriers with no behavior</td></tr>
+        <tr><td>dom_004</td><td>Domain Structure</td><td>Entity design</td><td><span class="badge badge-fail">FAIL</span></td><td>No audit fields, ID mismatch, risky @Data</td></tr>
+        <tr><td>dom_005</td><td>Domain Structure</td><td>Value objects</td><td><span class="badge badge-warn">WARN</span></td><td>Coordinate is projection, not value object</td></tr>
+        <tr><td>dom_006</td><td>Domain Structure</td><td>DTO separation</td><td><span class="badge badge-fail">FAIL</span></td><td>JPA entity used directly in controller</td></tr>
+        <tr><td>dom_007</td><td>Domain Structure</td><td>Interface-driven design</td><td><span class="badge badge-pass">PASS</span></td><td>MoodService interface with implementation</td></tr>
+        <tr><td>dom_008</td><td>Domain Structure</td><td>Naming conventions</td><td><span class="badge badge-warn">WARN</span></td><td>Awkward NearBy camelCase, verbose class name</td></tr>
+        <tr><td>dom_009</td><td>Domain Structure</td><td>Single Responsibility</td><td><span class="badge badge-warn">WARN</span></td><td>Service mixes orchestration with spatial logic</td></tr>
+        <tr><td>dom_010</td><td>Domain Structure</td><td>Application entry point</td><td><span class="badge badge-fail">FAIL</span></td><td>Named DemoApplication instead of MoodSenseApplication</td></tr>
+
+        <tr><td>err_001</td><td>Error Handling</td><td>Global exception handler</td><td><span class="badge badge-fail">FAIL</span></td><td>No @ControllerAdvice / @RestControllerAdvice</td></tr>
+        <tr><td>err_002</td><td>Error Handling</td><td>Error response format</td><td><span class="badge badge-fail">FAIL</span></td><td>No standard error response DTO</td></tr>
+        <tr><td>err_003</td><td>Error Handling</td><td>Null return handling</td><td><span class="badge badge-fail">FAIL</span></td><td>Null values in result lists</td></tr>
+        <tr><td>err_004</td><td>Error Handling</td><td>void endpoint response</td><td><span class="badge badge-fail">FAIL</span></td><td>POST returns void, not 201 Created</td></tr>
+        <tr><td>err_005</td><td>Error Handling</td><td>Custom exceptions</td><td><span class="badge badge-fail">FAIL</span></td><td>No domain-specific exceptions</td></tr>
+        <tr><td>err_006</td><td>Error Handling</td><td>Database error handling</td><td><span class="badge badge-fail">FAIL</span></td><td>No persistence error handling</td></tr>
+        <tr><td>err_007</td><td>Error Handling</td><td>Consistent ResponseEntity</td><td><span class="badge badge-fail">FAIL</span></td><td>Mixed void and ResponseEntity returns</td></tr>
+        <tr><td>err_008</td><td>Error Handling</td><td>Logging</td><td><span class="badge badge-fail">FAIL</span></td><td>No SLF4J / @Slf4j logging</td></tr>
+        <tr><td>err_009</td><td>Error Handling</td><td>Exception propagation</td><td><span class="badge badge-warn">WARN</span></td><td>No application-level failure strategy</td></tr>
+        <tr><td>err_010</td><td>Error Handling</td><td>HTTP 500 handling</td><td><span class="badge badge-warn">WARN</span></td><td>No global handler to normalize 5xx</td></tr>
+
+        <tr><td>sec_001</td><td>Security</td><td>CSRF protection</td><td><span class="badge badge-fail">FAIL</span></td><td>CSRF disabled globally</td></tr>
+        <tr><td>sec_002</td><td>Security</td><td>Hardcoded credentials</td><td><span class="badge badge-fail">FAIL</span></td><td>user1/pwd1, user2/pwd2 in source code</td></tr>
+        <tr><td>sec_003</td><td>Security</td><td>Deprecated security API</td><td><span class="badge badge-fail">FAIL</span></td><td>WebSecurityConfigurerAdapter deprecated</td></tr>
+        <tr><td>sec_004</td><td>Security</td><td>H2 console exposure</td><td><span class="badge badge-fail">FAIL</span></td><td>H2 console unauthenticated</td></tr>
+        <tr><td>sec_005</td><td>Security</td><td>Empty database password</td><td><span class="badge badge-fail">FAIL</span></td><td>Empty DB password in properties</td></tr>
+        <tr><td>sec_006</td><td>Security</td><td>Authentication store</td><td><span class="badge badge-warn">WARN</span></td><td>In-memory user store</td></tr>
+        <tr><td>sec_007</td><td>Security</td><td>Rate limiting</td><td><span class="badge badge-warn">WARN</span></td><td>No rate limiting configured</td></tr>
+        <tr><td>sec_008</td><td>Security</td><td>CORS configuration</td><td><span class="badge badge-warn">WARN</span></td><td>No CORS policy defined</td></tr>
+        <tr><td>sec_009</td><td>Security</td><td>HTTPS enforcement</td><td><span class="badge badge-warn">WARN</span></td><td>No HTTPS, Basic auth in cleartext</td></tr>
+        <tr><td>sec_010</td><td>Security</td><td>Security headers</td><td><span class="badge badge-warn">WARN</span></td><td>Only frameOptions configured</td></tr>
+
+        <tr><td>test_001</td><td>Testing</td><td>Test coverage breadth</td><td><span class="badge badge-fail">FAIL</span></td><td>Only service layer has unit tests</td></tr>
+        <tr><td>test_002</td><td>Testing</td><td>Controller tests</td><td><span class="badge badge-fail">FAIL</span></td><td>No MockMvc tests for controller</td></tr>
+        <tr><td>test_003</td><td>Testing</td><td>Security tests</td><td><span class="badge badge-fail">FAIL</span></td><td>spring-security-test declared but unused</td></tr>
+        <tr><td>test_004</td><td>Testing</td><td>Edge case tests</td><td><span class="badge badge-fail">FAIL</span></td><td>Only happy path tested</td></tr>
+        <tr><td>test_005</td><td>Testing</td><td>Bug detection</td><td><span class="badge badge-fail">FAIL</span></td><td>Distance bug not caught by tests</td></tr>
+        <tr><td>test_006</td><td>Testing</td><td>Repository query tests</td><td><span class="badge badge-fail">FAIL</span></td><td>No @DataJpaTest for JPQL</td></tr>
+        <tr><td>test_007</td><td>Testing</td><td>Negative tests</td><td><span class="badge badge-fail">FAIL</span></td><td>No invalid input tests</td></tr>
+        <tr><td>test_008</td><td>Testing</td><td>Test isolation</td><td><span class="badge badge-pass">PASS</span></td><td>Good @MockBean and @ContextConfiguration</td></tr>
+        <tr><td>test_009</td><td>Testing</td><td>Assertions quality</td><td><span class="badge badge-warn">WARN</span></td><td>testSave asserts input, not persistence</td></tr>
+        <tr><td>test_010</td><td>Testing</td><td>Test naming</td><td><span class="badge badge-warn">WARN</span></td><td>Generic method names</td></tr>
+
+        <tr><td>api_001</td><td>API Design</td><td>RESTful URLs</td><td><span class="badge badge-fail">FAIL</span></td><td>Verb-based paths, not resource-oriented</td></tr>
+        <tr><td>api_002</td><td>API Design</td><td>API versioning</td><td><span class="badge badge-warn">WARN</span></td><td>No versioning strategy</td></tr>
+        <tr><td>api_003</td><td>API Design</td><td>HTTP status codes</td><td><span class="badge badge-fail">FAIL</span></td><td>POST returns 200 instead of 201</td></tr>
+        <tr><td>api_004</td><td>API Design</td><td>Response wrapper</td><td><span class="badge badge-fail">FAIL</span></td><td>No consistent envelope structure</td></tr>
+        <tr><td>api_005</td><td>API Design</td><td>Request/response DTOs</td><td><span class="badge badge-fail">FAIL</span></td><td>JPA entities exposed directly</td></tr>
+        <tr><td>api_006</td><td>API Design</td><td>Modern annotations</td><td><span class="badge badge-warn">WARN</span></td><td>@RequestMapping instead of @PostMapping</td></tr>
+        <tr><td>api_007</td><td>API Design</td><td>API documentation</td><td><span class="badge badge-fail">FAIL</span></td><td>No OpenAPI/Swagger</td></tr>
+        <tr><td>api_008</td><td>API Design</td><td>Pagination</td><td><span class="badge badge-warn">WARN</span></td><td>Unbounded lists, no pagination</td></tr>
+        <tr><td>api_009</td><td>API Design</td><td>Input binding</td><td><span class="badge badge-fail">FAIL</span></td><td>Dual-binding with entity and @RequestParam</td></tr>
+        <tr><td>api_010</td><td>API Design</td><td>Coordinate precision</td><td><span class="badge badge-warn">WARN</span></td><td>int instead of double for lat/lon</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Prioritized Roadmap -->
+  <div class="r-section">
+    <h2>Prioritized Remediation Roadmap</h2>
+    <div class="card">
+      <h3>Priority 1 &mdash; Critical Bugs &amp; Security</h3>
+      <ol style="margin:.5rem 0 0 1.2rem;font-size:.9rem;">
+        <li>Fix the distance calculation bug in <code>getBestLocationFromCoordinate</code></li>
+        <li>Fix the repository ID type mismatch (<code>String</code> &rarr; <code>Integer</code>)</li>
+        <li>Remove hardcoded credentials; externalize to env vars</li>
+        <li>Disable H2 console in non-dev profiles</li>
+        <li>Replace <code>WebSecurityConfigurerAdapter</code> with <code>SecurityFilterChain</code></li>
+      </ol>
+    </div>
+    <div class="card" style="margin-top:1rem;">
+      <h3>Priority 2 &mdash; Error Handling &amp; Observability</h3>
+      <ol style="margin:.5rem 0 0 1.2rem;font-size:.9rem;">
+        <li>Add <code>@RestControllerAdvice</code> global exception handler</li>
+        <li>Create standard error response DTO</li>
+        <li>Add SLF4J logging throughout</li>
+        <li>Fix null safety issues in location resolution</li>
+        <li>Add <code>@Transactional</code> annotations</li>
+      </ol>
+    </div>
+    <div class="card" style="margin-top:1rem;">
+      <h3>Priority 3 &mdash; API &amp; Architecture</h3>
+      <ol style="margin:.5rem 0 0 1.2rem;font-size:.9rem;">
+        <li>Introduce request/response DTOs</li>
+        <li>Refactor endpoints to RESTful paths with versioning</li>
+        <li>Fix N+1 query problem</li>
+        <li>Rename <code>repositary</code> package to <code>repository</code></li>
+        <li>Add OpenAPI documentation</li>
+      </ol>
+    </div>
+    <div class="card" style="margin-top:1rem;">
+      <h3>Priority 4 &mdash; Testing &amp; Production Readiness</h3>
+      <ol style="margin:.5rem 0 0 1.2rem;font-size:.9rem;">
+        <li>Write controller tests with MockMvc</li>
+        <li>Write security tests using spring-security-test</li>
+        <li>Write repository integration tests with @DataJpaTest</li>
+        <li>Add edge-case and negative tests</li>
+        <li>Configure production database profile, Flyway, and connection pool</li>
+      </ol>
+    </div>
+  </div>
+
+  <footer>
+    R-Analysis Report generated via MCP Backend Assessment Pipeline &mdash; 2026-04-21
+  </footer>
+</div>
+</body>
+</html>
