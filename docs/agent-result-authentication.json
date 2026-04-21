@@ -1,0 +1,96 @@
+[
+  {
+    "rule_id": "auth_001",
+    "check": "Authentication mechanism (HTTP Basic, JWT, OAuth2)",
+    "result": "warn",
+    "detail": "The application uses HTTP Basic authentication (.httpBasic()) which transmits credentials (Base64-encoded username:password) with every request. HTTP Basic is the weakest standard authentication mechanism: credentials are sent in cleartext unless TLS is enforced (no TLS configuration is present), it offers no built-in session expiry or token revocation, and it is unsuitable for browser-based SPAs or mobile clients. There is no JWT, OAuth2, or session-based form-login configured. For a production API, token-based authentication (e.g., JWT with spring-boot-starter-oauth2-resource-server) should be adopted to avoid repeatedly transmitting raw credentials.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+    ]
+  },
+  {
+    "rule_id": "auth_002",
+    "check": "Password storage security",
+    "result": "pass",
+    "detail": "Passwords are hashed using BCryptPasswordEncoder before being stored in the InMemoryUserDetailsManager. BCrypt is a strong adaptive hashing algorithm with a built-in salt, which is the recommended approach for password storage in Spring Security. The default strength (10 rounds) is acceptable. However, the practical value is limited because the passwords themselves are trivially weak ('pwd1', 'pwd2') and are hardcoded in source code (see auth_010). The hashing mechanism itself is sound.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+    ]
+  },
+  {
+    "rule_id": "auth_003",
+    "check": "CSRF protection configuration",
+    "result": "fail",
+    "detail": "CSRF protection is globally disabled via .csrf().disable() at line 35 of SpringSecurityConfig. The configuration first sets up CSRF ignoring for /h2-console/** (which is reasonable for the console's iframe-based UI), but then immediately disables CSRF entirely for all endpoints. This leaves the application's state-changing POST endpoint (/uploadMood) vulnerable to cross-site request forgery attacks. Since the app uses HTTP Basic with browser-based credential prompts, CSRF attacks are feasible. CSRF should remain enabled for all application endpoints; if the app is a pure stateless REST API consumed only by non-browser clients, then disabling CSRF can be justified, but this intent is not documented and the current setup is risky.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+    ]
+  },
+  {
+    "rule_id": "auth_004",
+    "check": "CORS configuration",
+    "result": "warn",
+    "detail": "There is no CORS configuration anywhere in the application. No @CrossOrigin annotations are present on the controller, and no CorsConfigurationSource bean or .cors() call exists in the security configuration. By default, Spring Security will reject cross-origin requests from browsers, which is secure but may cause issues if the API is intended to be consumed by a frontend on a different origin. If cross-origin access is required, an explicit allowlist-based CORS policy should be configured. The absence of CORS is not a vulnerability per se, but it indicates the topic has not been consciously addressed.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java",
+      "src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java"
+    ]
+  },
+  {
+    "rule_id": "auth_005",
+    "check": "User management approach (in-memory vs database)",
+    "result": "fail",
+    "detail": "User credentials are managed entirely in-memory via InMemoryUserDetailsManager with a hardcoded list of two users. This approach does not support user registration, password changes, account lockout, or any dynamic user management. All users are lost on application restart, and adding new users requires a code change and redeployment. The application already has Spring Data JPA and a database configured (H2), so a JdbcUserDetailsManager or a custom UserDetailsService backed by a JPA User entity would be straightforward to implement and far more appropriate, even for a demo.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+    ]
+  },
+  {
+    "rule_id": "auth_006",
+    "check": "Role-based access control",
+    "result": "warn",
+    "detail": "Role-based access control is present but overly simplistic. All endpoints are protected by hasRole('USER'), and only a single role ('USER') exists. There is no differentiation between user roles (e.g., ADMIN, MODERATOR), no method-level security (@PreAuthorize, @Secured), and no fine-grained permission model. The antMatchers('/**').hasRole('USER') pattern is a broad catch-all that works but does not demonstrate intentional endpoint-level authorization. Additionally, @EnableGlobalMethodSecurity is not enabled, preventing the use of annotation-driven authorization on service methods.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+    ]
+  },
+  {
+    "rule_id": "auth_007",
+    "check": "Security headers configuration",
+    "result": "warn",
+    "detail": "The only security header explicitly configured is X-Frame-Options set to SAMEORIGIN (via .headers().frameOptions().sameOrigin()), and this was done solely to allow the H2 console to load in an iframe. Spring Security's default header configuration (X-Content-Type-Options, X-XSS-Protection, Cache-Control, etc.) is still active, which is good. However, important modern headers are missing: Content-Security-Policy (CSP), Strict-Transport-Security (HSTS, critical since HTTP Basic is used), Referrer-Policy, and Permissions-Policy. Without HSTS, the HTTP Basic credentials can be intercepted if any request is made over plain HTTP.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java"
+    ]
+  },
+  {
+    "rule_id": "auth_008",
+    "check": "H2 console security exposure",
+    "result": "fail",
+    "detail": "The H2 database console is enabled (spring.h2.console.enabled=true) and its endpoints (/h2-console/**) are explicitly permitted for unauthenticated access via .antMatchers('/h2-console/**').permitAll(). This means anyone with network access can reach the H2 console without authentication. The console provides full SQL access to the database, allowing data exfiltration, modification, or deletion. CSRF is also specifically disabled for this path, and X-Frame-Options is relaxed to SAMEORIGIN. Even for development, the console should require authentication. In a production profile, the H2 console must be completely disabled.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java",
+      "src/main/resources/application.properties"
+    ]
+  },
+  {
+    "rule_id": "auth_009",
+    "check": "Deprecated API usage (WebSecurityConfigurerAdapter)",
+    "result": "warn",
+    "detail": "SpringSecurityConfig extends WebSecurityConfigurerAdapter, which was deprecated in Spring Security 5.7 (shipped with Spring Boot 2.7.0 — the exact version this project uses). The recommended approach since 5.7 is to define SecurityFilterChain and UserDetailsService as @Bean methods in a @Configuration class, without extending any adapter. While the deprecated API still functions in Spring Boot 2.7.x, it will be removed in Spring Security 6.0 / Spring Boot 3.0, making this a migration blocker for future upgrades.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java",
+      "pom.xml"
+    ]
+  },
+  {
+    "rule_id": "auth_010",
+    "check": "Credential hardcoding / secrets management",
+    "result": "fail",
+    "detail": "Usernames and passwords ('user1'/'pwd1', 'user2'/'pwd2') are hardcoded directly in the Java source code of SpringSecurityConfig.java. The H2 datasource credentials (username 'sa', empty password) are also hardcoded in application.properties. These values are committed to version control, violating the principle of separating secrets from code. Passwords are trivially weak (4 characters, dictionary words with simple digit suffixes). There is no use of environment variables, Spring profiles, externalized configuration, or a secrets manager (e.g., Vault, AWS Secrets Manager). Any developer or attacker with access to the repository has full knowledge of all application credentials.",
+    "files": [
+      "src/main/java/com/example/moodsense/demo/config/SpringSecurityConfig.java",
+      "src/main/resources/application.properties"
+    ]
+  }
+]
