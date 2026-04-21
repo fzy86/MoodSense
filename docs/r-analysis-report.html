@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Backend Assessment &mdash; moodsense (2026-04-21 11:06)</title>
+  <style>
+    body { max-width: 940px; margin: 0 auto; padding: 2rem 2.5rem;
+           font-family: system-ui, -apple-system, sans-serif; line-height: 1.65; color: #1a1a1a; }
+    h1 { font-size: 1.85rem; margin-bottom: 0.2rem; }
+    h2 { font-size: 1.35rem; border-bottom: 2px solid #ddd; padding-bottom: 0.3rem; margin-top: 2.5rem; }
+    h3 { font-size: 1.05rem; margin-top: 1.4rem; color: #333; }
+    p  { margin: 0.5rem 0 0.75rem; }
+    hr { border: none; border-top: 1px solid #eee; margin: 2rem 0; }
+    .meta { color: #555; font-size: 0.9rem; margin-top: 0; }
+    a { color: #0566c7; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: 0.9rem; }
+    th { background: #f5f5f5; text-align: left; font-weight: 600; }
+    th, td { border: 1px solid #ddd; padding: 0.45rem 0.75rem; vertical-align: top; }
+    tr:nth-child(even) { background: #fafafa; }
+    .pass       { color: #0a6b0a; }
+    .critical   { color: #b00; font-weight: 600; }
+    .suggestion { color: #886600; }
+    .nice       { color: #666; }
+    ul.findings { list-style: none; padding-left: 0; margin: 0.5rem 0 1rem; }
+    ul.findings > li { margin-bottom: 0.85rem; padding: 0.5rem 0.75rem;
+                       border-left: 4px solid #e0e0e0; background: #fafafa;
+                       border-radius: 0 4px 4px 0; }
+    ul.findings > li.critical   { border-left-color: #b00;    background: #fff5f5; }
+    ul.findings > li.suggestion { border-left-color: #886600; background: #fffdf0; }
+    ul.findings > li.nice       { border-left-color: #bbb;    background: #f8f8f8; }
+    ul.findings > li.pass       { border-left-color: #0a6b0a; background: #f5fbf5; }
+    .finding-files { font-size: 0.82rem; margin-top: 6px; list-style: none; padding-left: 1.2em; }
+    .finding-files li { margin: 2px 0; }
+    .finding-files code { background: #f0f0f0; padding: 1px 5px; border-radius: 3px; font-size: 0.8rem; }
+    .band-fail { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 4px;
+                 background: #fce8e8; color: #b00; font-weight: 700; }
+    .band-pass { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 4px;
+                 background: #e8f5e8; color: #0a6b0a; font-weight: 700; }
+    .band-warn { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 4px;
+                 background: #fef9e7; color: #886600; font-weight: 700; }
+    .coverage-grid { display: grid; grid-template-columns: 210px 1fr;
+                     gap: 0.35rem 1rem; margin: 0.5rem 0 1rem; }
+    .coverage-grid dt { font-weight: 600; color: #444; font-size: 0.9rem; }
+    .coverage-grid dd { margin: 0; font-size: 0.9rem; }
+    ul.r-bullets { list-style: none; padding-left: 0; }
+    ul.r-bullets > li { margin-bottom: 0.5rem; }
+    ul.r-bullets ul   { margin: 0.3rem 0 0 1.2rem; }
+    footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #ddd;
+             font-size: 0.82rem; color: #666; }
+</style>
+</head>
+<body>
+
+<h1>Backend Assessment &mdash; moodsense</h1>
+<p class="meta">
+  <strong>Repository:</strong> moodsense &bull;
+  <strong>Date:</strong> 2026-04-21 11:06 &bull;
+  <strong>Scope:</strong> Generic rules &sect;1&ndash;&sect;7 &bull;
+  <strong>Stack:</strong> Spring Boot 2.7.0 / Java 11 &bull;
+  <strong>Rules assessed:</strong> 70 total
+</p>
+
+<h2>Summary</h2>
+<ul>
+  <li><strong>Overall:</strong> <span class="band-fail">Fail &mdash; 6 / 100 (Critical)</span></li>
+  <li><strong>Critical:</strong> 38</li>
+  <li><strong>Suggestions:</strong> 28</li>
+  <li><strong>Nice-to-have:</strong> 0</li>
+  <li><strong>Pass / Pass (N/A):</strong> 4</li>
+</ul>
+
+<h2>Assessment coverage</h2>
+<dl class="coverage-grid">
+  <dt>Framework detected</dt><dd>Spring Boot 2.7.0</dd>
+  <dt>Language</dt><dd>Java 11</dd>
+  <dt>Build tool</dt><dd>Maven</dd>
+  <dt>Database</dt><dd>H2 (in-memory)</dd>
+  <dt>ORM</dt><dd>Spring Data JPA / Hibernate</dd>
+  <dt>Security</dt><dd>Spring Security (HTTP Basic)</dd>
+</dl>
+
+<h2>R-Analysis methodology</h2>
+
+<h3>Retire</h3>
+<p>Components or patterns that should be removed:</p>
+<ul>
+  <li><strong>Authentication:</strong> WebSecurityConfigurerAdapter is deprecated in Spring Security 5.7.</li>
+  <li><strong>Validation:</strong> @NotNull on primitive int fields is dead code and should be retired.</li>
+</ul>
+
+<h3>Refactor</h3>
+<p>Components that need improvement but can be evolved in-place:</p>
+<ul>
+  <li><strong>API Design:</strong> HTTP method usage, Content type handling</li>
+  <li><strong>Domain Structure:</strong> Domain model richness, Value objects, Naming conventions, Single Responsibility</li>
+  <li><strong>Business Logic:</strong> Service layer completeness, Magic values, Immutability, Input sanitization</li>
+  <li><strong>Data Access:</strong> Repository interface, Database choice, Hardcoded queries, @Transactional, Migrations, Connection pool, Package naming</li>
+  <li><strong>Authentication:</strong> Auth mechanism, CORS, Roles, Security headers, Deprecated APIs</li>
+  <li><strong>Validation:</strong> Constraint annotations, Input sanitization, Custom validators, Cross-field validation</li>
+  <li><strong>Error Handling:</strong> Exception propagation, HTTP 500 handling</li>
+</ul>
+
+<h3>Rebuild</h3>
+<p>Critical issues requiring immediate action:</p>
+<ul>
+  <li><strong>API Design:</strong> RESTful URL naming, Response status codes, API versioning, DTO usage, Pagination, HATEOAS, API documentation, Endpoint naming consistency</li>
+  <li><strong>Domain Structure:</strong> Package naming (repositary typo), Entity design, DTO separation, Application entry point naming</li>
+  <li><strong>Business Logic:</strong> Distance calculation bug, Transaction management, Null safety, N+1 query performance, Method visibility, Repository ID type mismatch</li>
+  <li><strong>Data Access:</strong> Entity ID type consistency, N+1 query problem</li>
+  <li><strong>Authentication:</strong> CSRF disabled, Hardcoded in-memory users, H2 console unauthenticated, Credentials in source code</li>
+  <li><strong>Validation:</strong> Bean validation not applied, No service validation, Enum error handling, Dead @NotNull, No error responses, Incorrect @Valid usage</li>
+  <li><strong>Error Handling:</strong> No global handler, No error DTO, Null in lists, void POST, No custom exceptions, No DB error handling, Inconsistent ResponseEntity, No logging</li>
+</ul>
+
+<h3>Deliverable structure</h3>
+<table>
+<thead>
+<tr><th>Component</th><th>Type</th><th>Risk</th><th>Effort</th><th>Recommendation</th><th>Link</th></tr>
+</thead>
+<tbody>
+<tr><td>api-design</td><td>Backend</td><td>High</td><td>High</td><td>Refactor</td><td><a href="#component-api-design">&sect;1</a></td></tr>
+<tr><td>domain-structure</td><td>Backend</td><td>High</td><td>High</td><td>Refactor</td><td><a href="#component-domain-structure">&sect;2</a></td></tr>
+<tr><td>business-logic</td><td>Backend</td><td>High</td><td>High</td><td>Rebuild</td><td><a href="#component-business-logic">&sect;3</a></td></tr>
+<tr><td>data-access</td><td>Backend</td><td>High</td><td>High</td><td>Refactor</td><td><a href="#component-data-access">&sect;4</a></td></tr>
+<tr><td>authentication</td><td>Backend</td><td>High</td><td>High</td><td>Rebuild</td><td><a href="#component-authentication">&sect;5</a></td></tr>
+<tr><td>validation</td><td>Backend</td><td>High</td><td>High</td><td>Refactor</td><td><a href="#component-validation">&sect;6</a></td></tr>
+<tr><td>error-handling</td><td>Backend</td><td>High</td><td>High</td><td>Rebuild</td><td><a href="#component-error-handling">&sect;7</a></td></tr>
+</tbody>
+</table>
+
+<a id="component-api-design"></a>
+<h2 id="component-api-design">1. API Design</h2>
+<p><strong>Perspective:</strong> HTTP semantics, URI naming, response shapes, versioning, pagination, documentation, and error response format.</p>
+<ul class="findings">
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>RESTful URL naming.</strong> All three endpoints use verb-based naming which violates REST conventions. <em>Rule: api_001</em>
+    <ul class="finding-files">
+      <li><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></li>
+    </ul>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Response status codes.</strong> uploadMood POST returns void defaulting to 200 OK instead of 201 Created. <em>Rule: api_003</em>
+    <ul class="finding-files">
+      <li><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></li>
+    </ul>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>API versioning strategy.</strong> No API versioning strategy implemented. <em>Rule: api_005</em>
+    <ul class="finding-files">
+      <li><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></li>
+      <li><code>pom.xml</code></li>
+    </ul>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Request/Response DTO usage.</strong> JPA entities directly exposed in both request and response layers. <em>Rule: api_006</em>
+    <ul class="finding-files">
+      <li><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></li>
+      <li><code>src/main/java/com/example/moodsense/demo/model/Mood.java</code></li>
+      <li><code>src/main/java/com/example/moodsense/demo/model/Location.java</code></li>
+      <li><code>src/main/java/com/example/moodsense/demo/model/MoodDistribution.java</code></li>
+    </ul>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Pagination support.</strong> Neither GET endpoint supports pagination. <em>Rule: api_007</em>
+    <ul class="finding-files">
+      <li><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></li>
+      <li><code>src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</code></li>
+    </ul>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>HATEOAS support.</strong> No HATEOAS or hypermedia support. <em>Rule: api_008</em>
+    <ul class="finding-files">
+      <li><code>pom.xml</code></li>
+      <li><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></li>
+    </ul>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>API documentation.</strong> No Swagger/OpenAPI documentation configured. <em>Rule: api_009</em>
+    <ul class="finding-files">
+      <li><code>pom.xml</code></li>
+      <li><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></li>
+    </ul>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Consistent endpoint naming.</strong> Endpoint naming is inconsistent across routes. <em>Rule: api_010</em>
+    <ul class="finding-files">
+      <li><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></li>
+    </ul>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>HTTP method usage.</strong> HTTP methods partially correct but no PUT/PATCH/DELETE endpoints. <em>Rule: api_002</em>
+    <ul class="finding-files">
+      <li><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></li>
+    </ul>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Content type handling.</strong> No explicit produces or consumes media type declarations. <em>Rule: api_004</em>
+    <ul class="finding-files">
+      <li><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></li>
+    </ul>
+  </li>
+</ul>
+<h3>R-Analysis &mdash; api-design</h3>
+<ul class="r-bullets">
+  <li><strong>Retire:</strong> None identified.</li>
+  <li><strong>Refactor:</strong> <ul>
+    <li>HTTP method usage</li>
+    <li>Content type handling</li>
+  </ul></li>
+  <li><strong>Rebuild:</strong> <ul>
+    <li>RESTful URL naming: All three endpoints use verb-based naming which violates REST conventions.</li>
+    <li>Response status codes: uploadMood POST returns void defaulting to 200 OK instead of 201 Created.</li>
+    <li>API versioning strategy: No API versioning strategy implemented.</li>
+    <li>Request/Response DTO usage: JPA entities directly exposed in both request and response layers.</li>
+    <li>Pagination support: Neither GET endpoint supports pagination.</li>
+    <li>HATEOAS support: No HATEOAS or hypermedia support.</li>
+    <li>API documentation: No Swagger/OpenAPI documentation configured.</li>
+    <li>Consistent endpoint naming: Endpoint naming is inconsistent across routes.</li>
+  </ul></li>
+</ul>
+<hr>
+
+<a id="component-domain-structure"></a>
+<h2 id="component-domain-structure">2. Domain Structure</h2>
+<p><strong>Perspective:</strong> Controller/service/repository separation, design patterns, module boundaries, dependency management, configuration, and startup behaviour.</p>
+<ul class="findings">
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Package naming convention.</strong> The persistence package is named repositary instead of the standard repository. <em>Rule: dom_001</em>
+    <ul class="finding-files">
+      <li><code>src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</code></li>
+      <li><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></li>
+      <li><code>src/test/java/com/example/moodsense/demo/service/MoodServiceImplementationTest.java</code></li>
+    </ul>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Entity design.</strong> JPA entities lack audit fields. Mood uses primitive int for @GeneratedValue id while MoodRepository extends CrudRepository&lt;Mood, String&gt;. Lombok @Data on @Entity types is risky. <em>Rule: dom_004</em>
+    <ul class="finding-files">
+      <li><code>src/main/java/com/example/moodsense/demo/model/Mood.java</code></li>
+      <li><code>src/main/java/com/example/moodsense/demo/model/Location.java</code></li>
+      <li><code>src/main/java/com/example/moodsense/demo/repositary/MoodRepository.java</code></li>
+    </ul>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>DTO separation.</strong> The REST controller accepts and mutates the Mood JPA entity directly. <em>Rule: dom_006</em>
+    <ul class="finding-files">
+      <li><code>src/main/java/com/example/moodsense/demo/controller/MoodSenseController.java</code></li>
+      <li><code>src/main/java/com/example/moodsense/demo/model/Mood.java</code></li>
+    </ul>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Application entry point.</strong> The Spring Boot main class is named DemoApplication rather than something aligned with the product. <em>Rule: dom_010</em>
+    <ul class="finding-files">
+      <li><code>src/main/java/com/example/moodsense/demo/DemoApplication.java</code></li>
+    </ul>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Domain model richness.</strong> Entities are Lombok @Data data carriers with almost no behavior; anemic domain style. <em>Rule: dom_003</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Value objects.</strong> Coordinate is a Spring Data projection interface, not an explicit immutable value object. <em>Rule: dom_005</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Naming conventions.</strong> Minor issues include getHappyNearByLocations and verbose MoodServiceImplementation name. <em>Rule: dom_008</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Single Responsibility.</strong> MoodServiceImplementation mixes persistence delegation with location resolution and Euclidean distance logic. <em>Rule: dom_009</em>
+  </li>
+  <li class="pass">
+    <strong>Pass:</strong> Separation of concerns. The codebase uses distinct packages for controller, service, persistence, and model types. <em>Rule: dom_002</em>
+  </li>
+  <li class="pass">
+    <strong>Pass:</strong> Interface-driven design. MoodService is a dedicated interface with a Spring @Service implementation. <em>Rule: dom_007</em>
+  </li>
+</ul>
+<h3>R-Analysis &mdash; domain-structure</h3>
+<ul class="r-bullets">
+  <li><strong>Retire:</strong> None identified.</li>
+  <li><strong>Refactor:</strong> <ul>
+    <li>Domain model richness</li>
+    <li>Value objects</li>
+    <li>Naming conventions</li>
+    <li>Single Responsibility</li>
+  </ul></li>
+  <li><strong>Rebuild:</strong> <ul>
+    <li>Package naming convention: The persistence package is named repositary instead of the standard repository.</li>
+    <li>Entity design: JPA entities lack audit fields.</li>
+    <li>DTO separation: The REST controller accepts and mutates the Mood JPA entity directly.</li>
+    <li>Application entry point: The Spring Boot main class is named DemoApplication rather than something aligned with the product.</li>
+  </ul></li>
+</ul>
+<hr>
+
+<a id="component-business-logic"></a>
+<h2 id="component-business-logic">3. Business Logic</h2>
+<p><strong>Perspective:</strong> Transactional integrity, async messaging reliability, resilience patterns, maintainability, idempotency, and domain rule enforcement.</p>
+<ul class="findings">
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Logic correctness.</strong> Nearest-location distance in getBestLocationFromCoordinate is wrong: the second squared term uses location.getLatitude() minus coordinate.getLongitude() instead of location.getLongitude() minus coordinate.getLongitude(). <em>Rule: biz_001</em>
+    <ul class="finding-files">
+      <li><code>src/main/java/com/example/moodsense/demo/service/MoodServiceImplementation.java</code></li>
+    </ul>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Transaction management.</strong> MoodServiceImplementation.save delegates to the repository but neither the service method nor the interface is annotated with @Transactional. <em>Rule: biz_002</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Null safety.</strong> getHappyNearByLocations and getLocationsFromCoordinates do not guard against null. getBestLocationFromCoordinate returns null when there are no Location rows, but getLocationsFromCoordinates still adds that null to the result list. <em>Rule: biz_004</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Performance - N+1 queries.</strong> getBestLocationFromCoordinate calls moodRepository.getAllLocations() inside its loop, reloading all locations from the database for every coordinate. <em>Rule: biz_005</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Method visibility.</strong> Helper methods getLocationsFromCoordinates and getBestLocationFromCoordinate are public though they are only used internally. <em>Rule: biz_008</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Repository ID type mismatch.</strong> MoodRepository extends CrudRepository&lt;Mood, String&gt; but Mood declares @Id private int id. <em>Rule: biz_009</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Service layer completeness.</strong> uploadMood in the controller assembles the Mood before calling moodService.save. <em>Rule: biz_003</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Magic values.</strong> getAllHappyCoordinates uses the string literal HAPPY in JPQL. <em>Rule: biz_006</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Immutability and side-effects.</strong> getHappyNearByLocations appears to be a pure read but triggers repeated repository reads. <em>Rule: biz_007</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Input sanitization.</strong> Mood binding object is not @Validated on the method. <em>Rule: biz_010</em>
+  </li>
+</ul>
+<h3>R-Analysis &mdash; business-logic</h3>
+<ul class="r-bullets">
+  <li><strong>Retire:</strong> None identified.</li>
+  <li><strong>Refactor:</strong> <ul>
+    <li>Service layer completeness</li>
+    <li>Magic values</li>
+    <li>Immutability and side-effects</li>
+    <li>Input sanitization</li>
+  </ul></li>
+  <li><strong>Rebuild:</strong> <ul>
+    <li>Logic correctness: Distance calculation bug in getBestLocationFromCoordinate.</li>
+    <li>Transaction management: No @Transactional on service save method.</li>
+    <li>Null safety: Null elements can be added to result lists.</li>
+    <li>Performance - N+1 queries: getAllLocations called inside loop for every coordinate.</li>
+    <li>Method visibility: Internal helper methods are public.</li>
+    <li>Repository ID type mismatch: CrudRepository&lt;Mood, String&gt; but entity ID is int.</li>
+  </ul></li>
+</ul>
+<hr>
+
+<a id="component-data-access"></a>
+<h2 id="component-data-access">4. Data Access</h2>
+<p><strong>Perspective:</strong> Repository patterns, transactional integrity, connection pooling, schema migrations, query efficiency, caching, and outbound integration performance.</p>
+<ul class="findings">
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Entity ID type consistency.</strong> Mood declares @Id @GeneratedValue on a primitive int field, but MoodRepository is parameterized as CrudRepository&lt;Mood, String&gt;. <em>Rule: da_002</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>N+1 query problem.</strong> getBestLocationFromCoordinate calls moodRepository.getAllLocations() inside a for loop over coordinates. <em>Rule: da_004</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Repository extends appropriate interface.</strong> MoodRepository extends CrudRepository, which is valid but less idiomatic than JpaRepository. <em>Rule: da_001</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Use of production-grade database.</strong> In-memory H2 is appropriate for demos but not suitable for production. <em>Rule: da_003</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Query hardcoded enum string.</strong> getAllHappyCoordinates uses JPQL with moodStatus = HAPPY as a literal. <em>Rule: da_005</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Proper use of @Transactional.</strong> No @Transactional annotations appear on the service layer. <em>Rule: da_006</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Database migration tool.</strong> No Flyway or Liquibase dependency. <em>Rule: da_008</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Connection pool configuration.</strong> No explicit HikariCP settings are present. <em>Rule: da_009</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Repository naming.</strong> The Java package is named com.example.moodsense.demo.repositary, which misspells repository. <em>Rule: da_010</em>
+  </li>
+  <li class="pass">
+    <strong>Pass:</strong> Fetch strategy. Entities are standalone with scalar fields only; no fetch strategy misconfiguration. <em>Rule: da_007</em>
+  </li>
+</ul>
+<h3>R-Analysis &mdash; data-access</h3>
+<ul class="r-bullets">
+  <li><strong>Retire:</strong> None identified.</li>
+  <li><strong>Refactor:</strong> <ul>
+    <li>Repository extends appropriate interface</li>
+    <li>Use of production-grade database</li>
+    <li>Query hardcoded enum string</li>
+    <li>Proper use of @Transactional</li>
+    <li>Database migration tool</li>
+    <li>Connection pool configuration</li>
+    <li>Repository naming</li>
+  </ul></li>
+  <li><strong>Rebuild:</strong> <ul>
+    <li>Entity ID type consistency: Repository ID generic doesn't match entity.</li>
+    <li>N+1 query problem: Repeated query inside loop.</li>
+  </ul></li>
+</ul>
+<hr>
+
+<a id="component-authentication"></a>
+<h2 id="component-authentication">5. Authentication</h2>
+<p><strong>Perspective:</strong> Inbound request authentication, role/permission enforcement, session management, and outbound credential security.</p>
+<ul class="findings">
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>CSRF protection configuration.</strong> CSRF protection is globally disabled via .csrf().disable(). <em>Rule: auth_003</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>User management approach.</strong> User credentials managed entirely in-memory with hardcoded users. <em>Rule: auth_005</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>H2 console security exposure.</strong> H2 console enabled and permitted for unauthenticated access. <em>Rule: auth_008</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Credential hardcoding.</strong> Usernames and passwords hardcoded directly in Java source code. <em>Rule: auth_010</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Authentication mechanism.</strong> HTTP Basic authentication is the weakest standard mechanism. <em>Rule: auth_001</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>CORS configuration.</strong> No CORS configuration anywhere in the application. <em>Rule: auth_004</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Role-based access control.</strong> Only a single role USER exists with no differentiation. <em>Rule: auth_006</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Security headers configuration.</strong> Missing CSP, HSTS, Referrer-Policy, and Permissions-Policy headers. <em>Rule: auth_007</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Deprecated API usage.</strong> WebSecurityConfigurerAdapter is deprecated in Spring Security 5.7. <em>Rule: auth_009</em>
+  </li>
+  <li class="pass">
+    <strong>Pass:</strong> Password storage security. Passwords are hashed using BCryptPasswordEncoder. <em>Rule: auth_002</em>
+  </li>
+</ul>
+<h3>R-Analysis &mdash; authentication</h3>
+<ul class="r-bullets">
+  <li><strong>Retire:</strong> <ul>
+    <li>Deprecated API usage: WebSecurityConfigurerAdapter is deprecated in Spring Security 5.7.</li>
+  </ul></li>
+  <li><strong>Refactor:</strong> <ul>
+    <li>Authentication mechanism</li>
+    <li>CORS configuration</li>
+    <li>Role-based access control</li>
+    <li>Security headers configuration</li>
+    <li>Deprecated API usage</li>
+  </ul></li>
+  <li><strong>Rebuild:</strong> <ul>
+    <li>CSRF protection configuration: CSRF protection is globally disabled.</li>
+    <li>User management approach: User credentials managed entirely in-memory with hardcoded users.</li>
+    <li>H2 console security exposure: H2 console enabled and permitted for unauthenticated access.</li>
+    <li>Credential hardcoding: Usernames and passwords hardcoded directly in Java source code.</li>
+  </ul></li>
+</ul>
+<hr>
+
+<a id="component-validation"></a>
+<h2 id="component-validation">6. Validation</h2>
+<p><strong>Perspective:</strong> Input validation coverage, Bean Validation usage, schema strictness, content-type enforcement, size/bound constraints, and custom validators.</p>
+<ul class="findings">
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Bean validation usage.</strong> Neither @Valid nor @Validated is applied to the Mood parameter. <em>Rule: val_001</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Service layer validation.</strong> MoodServiceImplementation.save() delegates with no validation logic. <em>Rule: val_003</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Enum validation handling.</strong> Invalid enum strings cause unhandled MethodArgumentTypeMismatchException. <em>Rule: val_005</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>@NotNull on primitive types.</strong> Mood entity declares latitude/longitude as primitive int with @NotNull which is dead code. <em>Rule: val_006</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Validation error response handling.</strong> No structured error response handling anywhere in the application. <em>Rule: val_007</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>@Validated vs @Valid usage.</strong> @Validated and @Valid are used incorrectly in this application. <em>Rule: val_009</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Entity constraint annotations completeness.</strong> Coverage incomplete: person field has no constraints, moodStatus lacks @NotNull. <em>Rule: val_002</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Input sanitization.</strong> No explicit input sanitization anywhere in the codebase. <em>Rule: val_004</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Custom validators.</strong> No custom validators defined in the project. <em>Rule: val_008</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Cross-field validation.</strong> No cross-field validation exists in the application. <em>Rule: val_010</em>
+  </li>
+</ul>
+<h3>R-Analysis &mdash; validation</h3>
+<ul class="r-bullets">
+  <li><strong>Retire:</strong> <ul>
+    <li>@NotNull on primitive types: Mood entity declares latitude/longitude as primitive int with @NotNull which is dead code.</li>
+  </ul></li>
+  <li><strong>Refactor:</strong> <ul>
+    <li>Entity constraint annotations completeness</li>
+    <li>Input sanitization</li>
+    <li>Custom validators</li>
+    <li>Cross-field validation</li>
+  </ul></li>
+  <li><strong>Rebuild:</strong> <ul>
+    <li>Bean validation usage: Neither @Valid nor @Validated is applied to the Mood parameter.</li>
+    <li>Service layer validation: MoodServiceImplementation.save() delegates with no validation logic.</li>
+    <li>Enum validation handling: Invalid enum strings cause unhandled MethodArgumentTypeMismatchException.</li>
+    <li>Validation error response handling: No structured error response handling anywhere in the application.</li>
+    <li>@Validated vs @Valid usage: @Validated and @Valid are used incorrectly in this application.</li>
+  </ul></li>
+</ul>
+<hr>
+
+<a id="component-error-handling"></a>
+<h2 id="component-error-handling">7. Error Handling</h2>
+<p><strong>Perspective:</strong> Global exception mapping, error response consistency, graceful shutdown, async error handling, observability, and overload protection.</p>
+<ul class="findings">
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Global exception handler.</strong> No @ControllerAdvice or @RestControllerAdvice class and no @ExceptionHandler methods. <em>Rule: err_001</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Consistent error response format.</strong> No shared error response DTO. <em>Rule: err_002</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Null return handling.</strong> getBestLocationFromCoordinate returns null; getLocationsFromCoordinates adds null to the result list. <em>Rule: err_003</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>void endpoint response.</strong> uploadMood is declared void with no explicit HTTP status. <em>Rule: err_004</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>No custom exceptions.</strong> No domain-specific exceptions anywhere in the application. <em>Rule: err_005</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Database error handling.</strong> Save flows without try-catch or @Transactional rollback rules. <em>Rule: err_006</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Inconsistent ResponseEntity usage.</strong> uploadMood returns void while other endpoints return ResponseEntity. <em>Rule: err_007</em>
+  </li>
+  <li class="critical">
+    <strong>[Critical]</strong> <strong>Logging.</strong> No SLF4J Logger, @Slf4j, or LoggerFactory usage anywhere. <em>Rule: err_008</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>Exception propagation.</strong> No application-level strategy for failure modes; runtime exceptions propagate unchanged. <em>Rule: err_009</em>
+  </li>
+  <li class="suggestion">
+    <strong>[Suggestion]</strong> <strong>HTTP 500 on unhandled exceptions.</strong> Without a @RestControllerAdvice, unhandled exceptions use Spring Boot defaults. <em>Rule: err_010</em>
+  </li>
+</ul>
+<h3>R-Analysis &mdash; error-handling</h3>
+<ul class="r-bullets">
+  <li><strong>Retire:</strong> None identified.</li>
+  <li><strong>Refactor:</strong> <ul>
+    <li>Exception propagation</li>
+    <li>HTTP 500 on unhandled exceptions</li>
+  </ul></li>
+  <li><strong>Rebuild:</strong> <ul>
+    <li>Global exception handler: No @ControllerAdvice or @RestControllerAdvice class and no @ExceptionHandler methods.</li>
+    <li>Consistent error response format: No shared error response DTO.</li>
+    <li>Null return handling: getBestLocationFromCoordinate returns null; getLocationsFromCoordinates adds null to the result list.</li>
+    <li>void endpoint response: uploadMood is declared void with no explicit HTTP status.</li>
+    <li>No custom exceptions: No domain-specific exceptions anywhere in the application.</li>
+    <li>Database error handling: Save flows without try-catch or @Transactional rollback rules.</li>
+    <li>Inconsistent ResponseEntity usage: uploadMood returns void while other endpoints return ResponseEntity.</li>
+    <li>Logging: No SLF4J Logger, @Slf4j, or LoggerFactory usage anywhere.</li>
+  </ul></li>
+</ul>
+<hr>
+
+<h2>Appendix: Checklist summary</h2>
+<table>
+<thead>
+<tr><th>Category</th><th>Pass</th><th>Critical</th><th>Suggestion</th><th>Nice-to-have</th></tr>
+</thead>
+<tbody>
+<tr><td>&sect;1 API Design</td><td>&mdash;</td><td>8</td><td>2</td><td>0</td></tr>
+<tr><td>&sect;2 Domain Structure</td><td>partial</td><td>4</td><td>4</td><td>0</td></tr>
+<tr><td>&sect;3 Business Logic</td><td>&mdash;</td><td>6</td><td>4</td><td>0</td></tr>
+<tr><td>&sect;4 Data Access</td><td>partial</td><td>2</td><td>7</td><td>0</td></tr>
+<tr><td>&sect;5 Authentication</td><td>partial</td><td>4</td><td>5</td><td>0</td></tr>
+<tr><td>&sect;6 Validation</td><td>&mdash;</td><td>6</td><td>4</td><td>0</td></tr>
+<tr><td>&sect;7 Error Handling</td><td>&mdash;</td><td>8</td><td>2</td><td>0</td></tr>
+<tr style="font-weight:600; background:#f5f5f5;"><td>TOTAL (&sect;1&ndash;&sect;7 generic)</td><td>&mdash;</td><td>38</td><td>28</td><td>0</td></tr>
+</tbody>
+</table>
+
+<footer>
+  <p>
+    Generated 2026-04-21 11:06 &bull;
+    Overall score: <strong>6 / 100 &mdash; Critical</strong> &bull;
+    70 rules assessed across 7 categories &bull;
+    Stack: Spring Boot 2.7.0 / Java 11
+  </p>
+</footer>
+
+</body>
+</html>
